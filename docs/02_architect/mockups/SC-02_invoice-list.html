@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-02 請求書一覧 - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;--color-warn-bg:#fdecea;
+  --color-badge-unpaid:#b91c1c;--color-badge-partial:#b45309;--color-badge-paid:#15803d;
+  --radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 16px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;}
+.filter-bar .field{display:flex;flex-direction:column;gap:4px;}
+.filter-bar label{font-size:12px;color:var(--color-text-sub);}
+select{padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;min-width:160px;font-family:inherit;background:#fff;}
+.btn{display:inline-block;padding:8px 16px;border-radius:4px;border:1px solid var(--color-border);background:#fff;color:var(--color-text);font-size:13px;cursor:pointer;text-decoration:none;}
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-dark);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:left;font-size:13px;}
+th{background:#eef1f4;color:var(--color-text-sub);font-weight:600;white-space:nowrap;}
+td.amount{text-align:right;}
+tr.row-link{cursor:pointer;}
+tr.row-link:hover{background:#f7f9fa;}
+tr.overdue{background:var(--color-warn-bg);}
+tr.overdue td:first-child{border-left:3px solid var(--color-accent);}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap;}
+.badge-unpaid{background:var(--color-badge-unpaid);}
+.badge-partial{background:var(--color-badge-partial);}
+.badge-paid{background:var(--color-badge-paid);}
+.overdue-mark{color:var(--color-accent);font-size:12px;font-weight:600;margin-left:6px;}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">EIAI TEC 事務管理システム</div>
+  <a href="./SC-01_home.html" class="back-link">← ホームへ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">請求書一覧</h1>
+  <div class="card">
+    <div class="toolbar">
+      <div class="filter-bar">
+        <div class="field">
+          <label>取引先</label>
+          <select>
+            <option>すべて</option>
+            <option>株式会社サンプル商事</option>
+            <option>山田デザイン事務所</option>
+            <option>合同会社テストワークス</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>入金ステータス</label>
+          <select>
+            <option>すべて</option>
+            <option>未入金</option>
+            <option>一部入金</option>
+            <option>入金済み</option>
+          </select>
+        </div>
+      </div>
+      <a href="./SC-03_invoice-detail.html" class="btn btn-primary">新規作成</a>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>請求書番号</th>
+          <th>取引先名</th>
+          <th>発行日</th>
+          <th>支払期限</th>
+          <th style="text-align:right;">合計金額</th>
+          <th>入金ステータス</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-link overdue" onclick="location.href='./SC-03_invoice-detail.html'">
+          <td>2026-0004</td>
+          <td>株式会社サンプル商事</td>
+          <td>2026-08-01</td>
+          <td>2026-08-31<span class="overdue-mark">期限超過</span></td>
+          <td class="amount">330,000円</td>
+          <td><span class="badge badge-unpaid">未入金</span></td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-03_invoice-detail.html'">
+          <td>2026-0003</td>
+          <td>山田デザイン事務所</td>
+          <td>2026-08-10</td>
+          <td>2026-09-10</td>
+          <td class="amount">88,000円</td>
+          <td><span class="badge badge-partial">一部入金</span></td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-03_invoice-detail.html'">
+          <td>2026-0002</td>
+          <td>合同会社テストワークス</td>
+          <td>2026-07-20</td>
+          <td>2026-08-20</td>
+          <td class="amount">165,000円</td>
+          <td><span class="badge badge-paid">入金済み</span></td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-03_invoice-detail.html'">
+          <td>2026-0001</td>
+          <td>株式会社サンプル商事</td>
+          <td>2026-07-01</td>
+          <td>2026-07-31</td>
+          <td class="amount">55,000円</td>
+          <td><span class="badge badge-paid">入金済み</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

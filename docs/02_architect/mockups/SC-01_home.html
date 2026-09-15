@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-01 ホーム画面 - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;
+  --color-surface:#ffffff;
+  --color-border:#dde1e6;
+  --color-text:#222831;
+  --color-text-sub:#6b7280;
+  --color-primary:#2c5f7c;
+  --color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;
+  --color-warn-bg:#fdecea;
+  --radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .settings-link{color:#e6eef2;text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,.5);padding:5px 12px;border-radius:4px;}
+.app-header .settings-link:hover{background:rgba(255,255,255,.12);}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 16px;}
+.summary-cards{display:flex;gap:16px;margin-bottom:28px;}
+.summary-card{flex:1;background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);padding:18px 22px;}
+.summary-card .num{font-size:30px;font-weight:700;color:var(--color-primary);}
+.summary-card.overdue .num{color:var(--color-accent);}
+.summary-card .label{font-size:13px;color:var(--color-text-sub);margin-top:4px;}
+.summary-error{background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 18px;color:var(--color-text-sub);font-size:13px;}
+.nav-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.nav-card{background:#fff;border:1px solid var(--color-border);border-top:4px solid var(--color-primary);border-radius:var(--radius);padding:28px 20px;text-align:center;text-decoration:none;color:var(--color-text);transition:box-shadow .15s;}
+.nav-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08);}
+.nav-card .name{font-size:16px;font-weight:600;margin-bottom:6px;}
+.nav-card .desc{font-size:12px;color:var(--color-text-sub);}
+.section-label{font-size:13px;color:var(--color-text-sub);margin:0 0 10px;}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">EIAI TEC 事務管理システム</div>
+  <a href="./SC-11_settings.html" class="settings-link">システム設定</a>
+</header>
+<div class="container">
+  <h1 class="page-title">ホーム</h1>
+
+  <p class="section-label">サマリー</p>
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="num">3</div>
+      <div class="label">未入金件数</div>
+    </div>
+    <div class="summary-card overdue">
+      <div class="num">1</div>
+      <div class="label">支払期限超過件数</div>
+    </div>
+  </div>
+  <!-- サマリー取得失敗時の表示例(通常は上記カードのみ表示。取得失敗時はこのエリアのみエラー表示に置き換わり、下部の導線カードには影響しない)
+  <div class="summary-error">サマリー情報を取得できませんでした。</div>
+  -->
+
+  <p class="section-label">メニュー</p>
+  <div class="nav-cards">
+    <a class="nav-card" href="./SC-02_invoice-list.html">
+      <div class="name">請求書</div>
+      <div class="desc">請求書の発行・入金確認</div>
+    </a>
+    <a class="nav-card" href="./SC-06_expense-list.html">
+      <div class="name">経費管理</div>
+      <div class="desc">経費の登録・集計</div>
+    </a>
+    <a class="nav-card" href="./SC-04_quote-list.html">
+      <div class="name">見積書</div>
+      <div class="desc">見積書の作成・請求書への変換</div>
+    </a>
+    <a class="nav-card" href="./SC-09_receivable-list.html">
+      <div class="name">売掛金</div>
+      <div class="desc">入金状況・未入金の確認</div>
+    </a>
+  </div>
+</div>
+</body>
+</html>

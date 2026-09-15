@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-03 請求書詳細・編集 - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;--color-warn-bg:#fdecea;--radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 4px;}
+.sub-title{font-size:13px;color:var(--color-text-sub);margin-bottom:16px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+.section-title{font-size:15px;font-weight:600;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--color-border);}
+.form-grid{display:grid;grid-template-columns:140px 1fr 140px 1fr;gap:12px 16px;align-items:center;}
+.form-grid label{font-size:13px;color:var(--color-text-sub);}
+.form-grid .full{grid-column:1 / -1;}
+input[type=text],input[type=date],input[type=number],select,textarea{
+  padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;width:100%;font-family:inherit;
+}
+input[readonly]{background:#f4f6f8;color:var(--color-text-sub);}
+textarea{resize:vertical;min-height:60px;}
+.link-inline{font-size:12px;color:var(--color-primary);text-decoration:none;margin-left:8px;}
+.link-inline:hover{text-decoration:underline;}
+.note-box{background:#fdf6ec;border:1px solid #ecd9b0;border-radius:4px;padding:10px 14px;font-size:13px;color:#8a5a00;margin-bottom:16px;}
+.quote-link-box{font-size:13px;color:var(--color-text-sub);margin-bottom:14px;}
+.quote-link-box a{color:var(--color-primary);text-decoration:none;font-weight:600;}
+.quote-link-box a:hover{text-decoration:underline;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:8px 10px;border-bottom:1px solid var(--color-border);text-align:left;font-size:13px;}
+th{background:#eef1f4;color:var(--color-text-sub);font-weight:600;white-space:nowrap;}
+td.amount{text-align:right;white-space:nowrap;}
+.item-table input,.item-table select{padding:6px 8px;font-size:13px;}
+.item-table td.qty,.item-table td.price{width:110px;}
+.item-table td.tax{width:130px;}
+.item-table td.amt{width:110px;}
+.item-table td.del{width:60px;text-align:center;}
+.btn{display:inline-block;padding:8px 16px;border-radius:4px;border:1px solid var(--color-border);background:#fff;color:var(--color-text);font-size:13px;cursor:pointer;text-decoration:none;}
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-dark);}
+.btn-small{padding:4px 10px;font-size:12px;}
+.btn-danger-text{color:var(--color-accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline;}
+.add-row-btn{margin-top:10px;}
+.totals{margin-top:14px;display:flex;justify-content:flex-end;}
+.totals table{width:auto;min-width:340px;}
+.totals td{border-bottom:none;padding:4px 12px;}
+.totals tr.grand td{font-weight:700;font-size:16px;border-top:1px solid var(--color-border);padding-top:8px;}
+.actions-bar{display:flex;justify-content:flex-end;gap:10px;margin-bottom:20px;}
+.payment-add-form{display:flex;gap:10px;align-items:flex-end;margin-top:14px;flex-wrap:wrap;}
+.payment-add-form .field{display:flex;flex-direction:column;gap:4px;}
+.payment-add-form label{font-size:12px;color:var(--color-text-sub);}
+.payment-add-form input{width:160px;}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">EIAI TEC 事務管理システム</div>
+  <a href="./SC-02_invoice-list.html" class="back-link">← 請求書一覧へ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">請求書詳細・編集</h1>
+  <div class="sub-title">請求書番号: 2026-0004</div>
+
+  <div class="quote-link-box">変換元見積書: <a href="./SC-05_quote-detail.html">2026-0004</a></div>
+
+  <div class="card">
+    <div class="section-title">基本情報</div>
+    <div class="form-grid">
+      <label>取引先</label>
+      <div>
+        <select>
+          <option>株式会社サンプル商事</option>
+          <option>山田デザイン事務所</option>
+          <option>合同会社テストワークス</option>
+        </select>
+        <a href="./SC-10_client-master.html" class="link-inline">新規登録</a>
+      </div>
+      <label>請求書番号</label>
+      <input type="text" value="2026-0004" readonly>
+
+      <label>発行日</label>
+      <input type="date" value="2026-08-01">
+      <label>支払期限</label>
+      <input type="date" value="2026-08-31">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">品目明細</div>
+    <table class="item-table">
+      <thead>
+        <tr>
+          <th>品目名</th>
+          <th class="qty">数量</th>
+          <th class="price">単価</th>
+          <th class="tax">税区分</th>
+          <th class="amt">金額</th>
+          <th class="del">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" value="Webサイト制作作業"></td>
+          <td class="qty"><input type="number" value="1"></td>
+          <td class="price"><input type="number" value="300000"></td>
+          <td class="tax">
+            <select>
+              <option selected>標準10%</option>
+              <option>非課税</option>
+              <option>不課税</option>
+            </select>
+          </td>
+          <td class="amt">300,000円</td>
+          <td class="del"><button class="btn-danger-text">削除</button></td>
+        </tr>
+        <tr>
+          <td><input type="text" value="交通費実費"></td>
+          <td class="qty"><input type="number" value="1"></td>
+          <td class="price"><input type="number" value="0"></td>
+          <td class="tax">
+            <select>
+              <option>標準10%</option>
+              <option selected>非課税</option>
+              <option>不課税</option>
+            </select>
+          </td>
+          <td class="amt">0円</td>
+          <td class="del"><button class="btn-danger-text">削除</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="btn add-row-btn">明細行を追加</button>
+
+    <div class="totals">
+      <table>
+        <tr><td>小計(標準10%)</td><td class="amount">300,000円</td></tr>
+        <tr><td>小計(非課税)</td><td class="amount">0円</td></tr>
+        <tr><td>消費税額(標準10%)</td><td class="amount">30,000円</td></tr>
+        <tr class="grand"><td>合計金額</td><td class="amount">330,000円</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">備考</div>
+    <textarea placeholder="備考を入力してください">お振込手数料はご負担いただけますと幸いです。</textarea>
+  </div>
+
+  <div class="card">
+    <div class="section-title">入金記録</div>
+    <table>
+      <thead>
+        <tr><th style="width:160px;">入金日</th><th style="width:160px;text-align:right;">入金額</th><th>備考</th></tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="3" style="color:var(--color-text-sub);">入金記録はまだありません。</td></tr>
+      </tbody>
+    </table>
+    <div class="payment-add-form">
+      <div class="field"><label>入金日</label><input type="date"></div>
+      <div class="field"><label>入金額</label><input type="number" placeholder="0"></div>
+      <div class="field" style="flex:1;"><label>備考</label><input type="text" placeholder="任意"></div>
+      <button class="btn">追加</button>
+    </div>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn">PDF出力</button>
+    <button class="btn btn-primary">保存</button>
+  </div>
+</div>
+</body>
+</html>

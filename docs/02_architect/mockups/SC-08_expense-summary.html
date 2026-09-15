@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-08 経費集計 - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;--radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1000px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 16px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+.section-title{font-size:15px;font-weight:600;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--color-border);}
+.filter-bar{display:flex;gap:12px;align-items:flex-end;}
+.filter-bar .field{display:flex;flex-direction:column;gap:4px;}
+.filter-bar label{font-size:12px;color:var(--color-text-sub);}
+input[type=month]{padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;font-family:inherit;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:left;font-size:13px;}
+th{background:#eef1f4;color:var(--color-text-sub);font-weight:600;white-space:nowrap;}
+td.amount,th.amount{text-align:right;}
+tr.grand td{font-weight:700;border-top:2px solid var(--color-border);}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">EIAI TEC 事務管理システム</div>
+  <a href="./SC-06_expense-list.html" class="back-link">← 経費一覧へ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">経費集計</h1>
+
+  <div class="card">
+    <div class="section-title">集計期間</div>
+    <div class="filter-bar">
+      <div class="field">
+        <label>集計対象年月(From)</label>
+        <input type="month" value="2025-10">
+      </div>
+      <div class="field">
+        <label>集計対象年月(To)</label>
+        <input type="month" value="2026-09">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">勘定科目別集計</div>
+    <table>
+      <thead>
+        <tr><th>勘定科目</th><th style="text-align:right;">件数</th><th class="amount">合計金額</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>消耗品費</td><td style="text-align:right;">8</td><td class="amount">42,300円</td></tr>
+        <tr><td>旅費交通費</td><td style="text-align:right;">14</td><td class="amount">28,600円</td></tr>
+        <tr><td>通信費</td><td style="text-align:right;">12</td><td class="amount">79,200円</td></tr>
+        <tr><td>接待交際費</td><td style="text-align:right;">3</td><td class="amount">15,000円</td></tr>
+        <tr class="grand"><td>合計</td><td style="text-align:right;">37</td><td class="amount">165,100円</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="section-title">期間別(月単位)集計</div>
+    <table>
+      <thead>
+        <tr><th>年月</th><th class="amount">合計金額</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2026-09</td><td class="amount">11,100円</td></tr>
+        <tr><td>2026-08</td><td class="amount">23,400円</td></tr>
+        <tr><td>2026-07</td><td class="amount">18,900円</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>
