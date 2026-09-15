@@ -14,3 +14,30 @@ Thumbs.db
 
 # ログ
 *.log
+
+# Python(backend/)
+backend/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+backend/run/
+backend/logs/
+
+# Node / フロントエンド(frontend/)
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# フロントエンドのビルド成果物(backend/static、npm run buildで生成、詳細設計書4.7.5)
+backend/static/
+
+# データ(SQLiteファイル・添付ファイル・生成物、db/・data/配下)
+db/*.db*
+data/attachments/**
+!data/attachments/.gitkeep
+!data/attachments/expenses/
+!data/attachments/expenses/.gitkeep
+
+# ビルド生成物(dist/起動.app・終了.app)
+dist/

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>{{ document_title }} {{ document_number }}</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  body { font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; font-size: 11pt; color: #222831; }
+  h1 { font-size: 20pt; margin: 0 0 4mm; }
+  .document-number { font-size: 10pt; color: #6b7280; margin-bottom: 8mm; }
+  .parties { display: flex; justify-content: space-between; margin-bottom: 8mm; }
+  .client-block { font-size: 12pt; }
+  .client-block .name { font-weight: 700; font-size: 14pt; border-bottom: 1px solid #222831; padding-bottom: 2mm; }
+  .issuer-block { font-size: 10pt; text-align: right; }
+  .dates { margin-bottom: 6mm; font-size: 10pt; }
+  table.items { width: 100%; border-collapse: collapse; margin-bottom: 6mm; }
+  table.items th, table.items td { border: 1px solid #dde1e6; padding: 2mm 3mm; font-size: 10pt; }
+  table.items th { background: #eef1f4; }
+  table.items td.amount, table.items th.amount { text-align: right; }
+  table.totals { width: 70mm; margin-left: auto; border-collapse: collapse; }
+  table.totals td { padding: 1.5mm 3mm; font-size: 10pt; }
+  table.totals tr.grand td { font-weight: 700; font-size: 13pt; border-top: 1px solid #222831; }
+  .remarks { margin-top: 8mm; font-size: 10pt; white-space: pre-wrap; }
+  .registration-number { margin-top: 4mm; font-size: 9pt; color: #6b7280; }
+</style>
+</head>
+<body>
+  <h1>{{ document_title }}</h1>
+  <div class="document-number">{{ document_title }}番号: {{ document_number }}</div>
+
+  <div class="parties">
+    <div class="client-block">
+      <div class="name">{{ client_name }} 御中</div>
+      <div>{{ client_address or "" }}</div>
+    </div>
+    <div class="issuer-block">
+      <div>{{ issuer_business_name or issuer_name }}</div>
+      <div>{{ issuer_name }}</div>
+      <div>{{ issuer_address or "" }}</div>
+      <div>{{ issuer_contact_info or "" }}</div>
+      <div class="registration-number">登録番号: {{ issuer_registration_number or "" }}</div>
+    </div>
+  </div>
+
+  <div class="dates">
+    {% for label, value in date_fields %}
+      <div>{{ label }}: {{ value or "未設定" }}</div>
+    {% endfor %}
+  </div>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th>品目名</th>
+        <th class="amount">数量</th>
+        <th class="amount">単価</th>
+        <th>税区分</th>
+        <th class="amount">金額</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.item_name }}</td>
+        <td class="amount">{{ item.quantity }}</td>
+        <td class="amount">{{ "{:,}".format(item.unit_price) }}円</td>
+        <td>{{ item.tax_category_label }}</td>
+        <td class="amount">{{ "{:,}".format(item.amount) }}円</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="totals">
+    {% for label, value in tax_breakdown %}
+    <tr><td>{{ label }}</td><td class="amount">{{ "{:,}".format(value) }}円</td></tr>
+    {% endfor %}
+    <tr class="grand"><td>合計金額</td><td class="amount">{{ "{:,}".format(total_amount) }}円</td></tr>
+  </table>
+
+  {% if remarks %}
+  <div class="remarks">備考: {{ remarks }}</div>
+  {% endif %}
+</body>
+</html>

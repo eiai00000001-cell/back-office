@@ -1,0 +1,171 @@
+export type TaxCategory = 'STANDARD_10' | 'NON_TAXABLE' | 'OUT_OF_SCOPE'
+export type ExpenseTaxCategory = TaxCategory | 'NOT_APPLICABLE'
+export type QuoteStatus = 'DRAFT' | 'CONFIRMED'
+export type PaymentStatus = 'UNPAID' | 'PARTIALLY_PAID' | 'PAID'
+export type PaymentMethod = 'CASH' | 'CREDIT_CARD' | 'BANK_TRANSFER' | 'OTHER'
+
+export const TAX_CATEGORY_LABELS: Record<TaxCategory, string> = {
+  STANDARD_10: '標準10%',
+  NON_TAXABLE: '非課税',
+  OUT_OF_SCOPE: '不課税',
+}
+
+export const EXPENSE_TAX_CATEGORY_LABELS: Record<ExpenseTaxCategory, string> = {
+  ...TAX_CATEGORY_LABELS,
+  NOT_APPLICABLE: '対象外',
+}
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  UNPAID: '未入金',
+  PARTIALLY_PAID: '一部入金',
+  PAID: '入金済み',
+}
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  CASH: '現金',
+  CREDIT_CARD: 'クレジットカード',
+  BANK_TRANSFER: '銀行振込',
+  OTHER: 'その他',
+}
+
+export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
+  DRAFT: '作成中',
+  CONFIRMED: '確定',
+}
+
+export const ACCOUNT_CATEGORIES = [
+  '旅費交通費',
+  '通信費',
+  '消耗品費',
+  '水道光熱費',
+  '地代家賃',
+  '外注工賃',
+  '接待交際費',
+  '会議費',
+  '新聞図書費',
+  '支払手数料',
+  '租税公課',
+  '雑費',
+  'その他',
+] as const
+
+export interface ItemInput {
+  id?: number
+  item_name: string
+  quantity: number
+  unit_price: number
+  tax_category: TaxCategory
+}
+
+export interface ItemResponse extends ItemInput {
+  id: number
+  amount: number
+  sort_order: number
+}
+
+export interface Client {
+  id: number
+  name: string
+  postal_code: string | null
+  address: string | null
+  contact_person: string | null
+  contact_info: string | null
+}
+
+export interface CompanyProfile {
+  name: string
+  business_name: string | null
+  address: string | null
+  contact_info: string | null
+  invoice_registration_number: string | null
+}
+
+export interface Payment {
+  id: number
+  invoice_id: number
+  payment_date: string
+  amount: number
+  remarks: string | null
+}
+
+export interface Invoice {
+  id: number
+  invoice_number: string
+  client_id: number
+  client_name: string
+  issue_date: string | null
+  due_date: string | null
+  source_quote_id: number | null
+  items: ItemResponse[]
+  subtotal_amount: number
+  tax_amount: number
+  total_amount: number
+  remarks: string | null
+  payments: Payment[]
+  payment_status: PaymentStatus
+  is_overdue: boolean
+}
+
+export interface InvoiceListItem {
+  id: number
+  invoice_number: string
+  client_id: number
+  client_name: string
+  issue_date: string | null
+  due_date: string | null
+  total_amount: number
+  paid_amount: number
+  payment_status: PaymentStatus
+  is_overdue: boolean
+}
+
+export interface Quote {
+  id: number
+  quote_number: string
+  client_id: number
+  client_name: string
+  issue_date: string | null
+  expiry_date: string | null
+  status: QuoteStatus
+  items: ItemResponse[]
+  subtotal_amount: number
+  tax_amount: number
+  total_amount: number
+  remarks: string | null
+  converted_invoice_id: number | null
+  converted_invoice_number: string | null
+}
+
+export interface QuoteListItem {
+  id: number
+  quote_number: string
+  client_id: number
+  client_name: string
+  issue_date: string | null
+  expiry_date: string | null
+  total_amount: number
+  status: QuoteStatus
+}
+
+export interface Expense {
+  id: number
+  expense_date: string
+  account_category: string
+  amount: number
+  tax_category: ExpenseTaxCategory
+  payee: string | null
+  payment_method: PaymentMethod | null
+  memo: string | null
+  attachment_path: string | null
+  attachment_original_name: string | null
+}
+
+export interface ExpenseSummary {
+  by_category: { account_category: string; count: number; total_amount: number }[]
+  by_month: { year_month: string; total_amount: number }[]
+}
+
+export interface HomeSummary {
+  unpaid_count: number
+  overdue_count: number
+}
