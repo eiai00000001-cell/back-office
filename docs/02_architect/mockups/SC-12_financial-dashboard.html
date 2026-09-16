@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-12 財務ダッシュボード - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;--color-positive:#2f8f5b;--radius:6px;
+  --color-series2:#9fc3d6;--color-expense:#c97b3d;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 4px;}
+.sub-title{font-size:13px;color:var(--color-text-sub);margin-bottom:20px;}
+
+.dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;}
+.card.span-2{grid-column:1 / -1;}
+.section-title{font-size:15px;font-weight:600;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid var(--color-border);}
+.chart-block{margin-top:14px;}
+.chart-block + .chart-block{margin-top:22px;}
+.chart-total{font-size:12px;color:var(--color-text-sub);margin-bottom:8px;}
+.chart-total strong{color:var(--color-text);font-size:14px;font-weight:600;}
+.chart-total .sep{margin:0 10px;color:var(--color-border);}
+
+/* 棒グラフ(複数月推移) */
+.bars-area{display:flex;align-items:flex-end;gap:4px;height:140px;border-bottom:1px solid var(--color-border);padding:0 2px;}
+.bar-col{flex:1;display:flex;justify-content:center;align-items:flex-end;height:100%;}
+.bars{display:flex;gap:2px;align-items:flex-end;height:100%;}
+.bar{width:9px;min-height:2px;border-radius:2px 2px 0 0;}
+.bar.sales,.bar.quote-count{background:var(--color-primary);}
+.bar.payments,.bar.quote-amount{background:var(--color-series2);}
+.bar.expense{width:16px;background:var(--color-expense);}
+.month-labels{display:flex;gap:4px;padding:0 2px;margin-top:4px;}
+.month-labels span{flex:1;text-align:center;font-size:10px;color:var(--color-text-sub);}
+
+/* 損益(ゼロ基準線)グラフ */
+.profit-chart{position:relative;display:flex;gap:4px;height:140px;padding:0 2px;}
+.profit-chart .baseline{position:absolute;left:0;right:0;top:87%;height:1px;background:var(--color-border);}
+.profit-col{flex:1;position:relative;height:100%;}
+.profit-bar{position:absolute;left:50%;transform:translateX(-50%);width:9px;border-radius:2px;}
+.profit-bar.pos{bottom:13%;background:var(--color-positive);border-radius:2px 2px 0 0;}
+.profit-bar.neg{top:87%;background:var(--color-accent);border-radius:0 0 2px 2px;}
+
+/* 円グラフ */
+.pie-wrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+.pie{width:120px;height:120px;border-radius:50%;flex-shrink:0;
+  background:conic-gradient(
+    var(--color-primary) 0% 25%,
+    #4f8fb0 25% 43%,
+    #7fb3d1 43% 58%,
+    var(--color-accent) 58% 70%,
+    #e08e45 70% 89%,
+    #8e6fc7 89% 100%);
+}
+.pie-legend{font-size:12px;color:var(--color-text-sub);flex:1;min-width:180px;}
+.pie-legend .item{display:flex;justify-content:space-between;gap:12px;padding:3px 0;}
+.pie-legend .item .name{display:flex;align-items:center;}
+.pie-legend .dot{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:6px;flex-shrink:0;}
+.pie-legend .amt{color:var(--color-text);white-space:nowrap;}
+
+.legend{display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--color-text-sub);flex-wrap:wrap;}
+.legend .item{display:flex;align-items:center;}
+.legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;}
+.legend .dot.sales,.legend .dot.quote-count{background:var(--color-primary);}
+.legend .dot.payments,.legend .dot.quote-amount{background:var(--color-series2);}
+.legend .dot.expense{background:var(--color-expense);}
+.legend .dot.pos{background:var(--color-positive);}
+.legend .dot.neg{background:var(--color-accent);}
+
+.quote-row{display:flex;gap:24px;align-items:stretch;margin-top:14px;flex-wrap:wrap;}
+.quote-charts{flex:1;min-width:220px;}
+.stat-box{background:#eef4f7;border-radius:var(--radius);padding:16px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:150px;}
+.stat-box .stat-num{font-size:32px;font-weight:700;color:var(--color-primary);}
+.stat-box .stat-label{font-size:12px;color:var(--color-text-sub);margin-top:4px;text-align:center;}
+
+.dashboard-error{background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 18px;color:var(--color-text-sub);font-size:13px;text-align:center;}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">EIAI TEC 事務管理システム</div>
+  <a href="./SC-01_home.html" class="back-link">← ホームへ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">財務ダッシュボード</h1>
+  <div class="sub-title">対象期間: 直近12ヶ月(2025年10月〜2026年9月) ※期間の絞り込みはできません</div>
+
+  <div class="dashboard-grid">
+
+    <!-- (a) 売上・入金状況 -->
+    <div class="card span-2">
+      <div class="section-title">売上・入金状況</div>
+      <div class="chart-block">
+        <div class="chart-total">直近12ヶ月合計 売上: <strong>9,480,000円</strong><span class="sep">|</span>入金: <strong>8,950,000円</strong></div>
+        <div class="bars-area">
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:44%"></div><div class="bar payments" style="height:41%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:56%"></div><div class="bar payments" style="height:50%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:39%"></div><div class="bar payments" style="height:43%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:20%"></div><div class="bar payments" style="height:36%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:64%"></div><div class="bar payments" style="height:59%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:93%"></div><div class="bar payments" style="height:71%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:32%"></div><div class="bar payments" style="height:39%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:71%"></div><div class="bar payments" style="height:64%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:61%"></div><div class="bar payments" style="height:57%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:50%"></div><div class="bar payments" style="height:54%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:68%"></div><div class="bar payments" style="height:61%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar sales" style="height:79%"></div><div class="bar payments" style="height:64%"></div></div></div>
+        </div>
+        <div class="month-labels">
+          <span>25/10</span><span>25/11</span><span>25/12</span><span>26/1</span><span>26/2</span><span>26/3</span>
+          <span>26/4</span><span>26/5</span><span>26/6</span><span>26/7</span><span>26/8</span><span>26/9</span>
+        </div>
+        <div class="legend">
+          <span class="item"><i class="dot sales"></i>売上(発行日基準)</span>
+          <span class="item"><i class="dot payments"></i>入金額(入金日基準・参考指標)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- (b) 経費 -->
+    <div class="card span-2">
+      <div class="section-title">経費</div>
+      <div class="chart-block">
+        <div class="chart-total">直近12ヶ月合計経費: <strong>2,770,000円</strong></div>
+        <div class="bars-area">
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:36%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:44%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:30%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:92%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:60%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:24%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:56%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:40%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:34%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:48%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:38%"></div></div></div>
+          <div class="bar-col"><div class="bars"><div class="bar expense" style="height:52%"></div></div></div>
+        </div>
+        <div class="month-labels">
+          <span>25/10</span><span>25/11</span><span>25/12</span><span>26/1</span><span>26/2</span><span>26/3</span>
+          <span>26/4</span><span>26/5</span><span>26/6</span><span>26/7</span><span>26/8</span><span>26/9</span>
+        </div>
+        <div class="legend"><span class="item"><i class="dot expense"></i>月次経費合計(発生日基準)</span></div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-total">勘定科目別内訳(直近12ヶ月)</div>
+        <div class="pie-wrap">
+          <div class="pie"></div>
+          <div class="pie-legend">
+            <div class="item"><span class="name"><i class="dot" style="background:var(--color-primary);"></i>消耗品費</span><span class="amt">680,000円(25%)</span></div>
+            <div class="item"><span class="name"><i class="dot" style="background:#4f8fb0;"></i>旅費交通費</span><span class="amt">500,000円(18%)</span></div>
+            <div class="item"><span class="name"><i class="dot" style="background:#7fb3d1;"></i>通信費</span><span class="amt">420,000円(15%)</span></div>
+            <div class="item"><span class="name"><i class="dot" style="background:var(--color-accent);"></i>接待交際費</span><span class="amt">320,000円(12%)</span></div>
+            <div class="item"><span class="name"><i class="dot" style="background:#e08e45;"></i>地代家賃</span><span class="amt">530,000円(19%)</span></div>
+            <div class="item"><span class="name"><i class="dot" style="background:#8e6fc7;"></i>水道光熱費</span><span class="amt">320,000円(11%)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- (c) 損益(収支) -->
+    <div class="card">
+      <div class="section-title">損益(収支)</div>
+      <div class="chart-block">
+        <div class="chart-total">直近12ヶ月合計損益: <strong style="color:var(--color-positive);">+6,710,000円</strong></div>
+        <div class="profit-chart">
+          <div class="baseline"></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:32%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:41%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:29%"></div></div>
+          <div class="profit-col"><div class="profit-bar neg" style="height:13%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:44%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:87%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:13%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:59%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:50%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:34%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:56%"></div></div>
+          <div class="profit-col"><div class="profit-bar pos" style="height:62%"></div></div>
+        </div>
+        <div class="month-labels">
+          <span>25/10</span><span>25/11</span><span>25/12</span><span>26/1</span><span>26/2</span><span>26/3</span>
+          <span>26/4</span><span>26/5</span><span>26/6</span><span>26/7</span><span>26/8</span><span>26/9</span>
+        </div>
+        <div class="legend">
+          <span class="item"><i class="dot pos"></i>黒字月(売上-経費 ≧ 0円)</span>
+          <span class="item"><i class="dot neg"></i>赤字月(売上-経費 &lt; 0円、例: 26/1)</span>
+        </div>
+      </div>
+
+      <!-- 損益区画のデータ取得失敗時の表示例(通常は上記グラフのみ表示。取得失敗時はこのエリアのみエラー表示に置き換わり、他区画(売上・入金状況/経費/見積状況)の表示・操作には影響しない)
+      <div class="dashboard-error">損益データを取得できませんでした。しばらくしてから再度お試しください。</div>
+      -->
+    </div>
+
+    <!-- (d) 見積状況 -->
+    <div class="card">
+      <div class="section-title">見積状況</div>
+      <div class="quote-row">
+        <div class="quote-charts">
+          <div class="chart-block" style="margin-top:0;">
+            <div class="chart-total">月次見積件数(合計42件)</div>
+            <div class="bars-area" style="height:80px;">
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:43%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:57%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:29%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:14%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:71%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:86%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:29%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:57%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:43%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:43%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:71%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-count" style="height:57%"></div></div></div>
+            </div>
+            <div class="month-labels">
+              <span>25/10</span><span>25/11</span><span>25/12</span><span>26/1</span><span>26/2</span><span>26/3</span>
+              <span>26/4</span><span>26/5</span><span>26/6</span><span>26/7</span><span>26/8</span><span>26/9</span>
+            </div>
+          </div>
+          <div class="chart-block">
+            <div class="chart-total">月次見積金額合計(合計11,650,000円)</div>
+            <div class="bars-area" style="height:80px;">
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:47%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:65%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:29%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:15%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:82%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:94%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:35%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:71%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:53%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:50%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:76%"></div></div></div>
+              <div class="bar-col"><div class="bars"><div class="bar quote-amount" style="height:68%"></div></div></div>
+            </div>
+            <div class="month-labels">
+              <span>25/10</span><span>25/11</span><span>25/12</span><span>26/1</span><span>26/2</span><span>26/3</span>
+              <span>26/4</span><span>26/5</span><span>26/6</span><span>26/7</span><span>26/8</span><span>26/9</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">68%</div>
+          <div class="stat-label">見積成約率<br>(見積→請求書変換件数<br>÷見積作成件数)</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
