@@ -18,7 +18,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import AppHeader from '../components/AppHeader'
 import { clientsApi } from '../api/clients'
 import { extractErrorMessage } from '../api/client'
@@ -42,6 +42,7 @@ const emptyValues: ClientFormValues = { name: '', postal_code: '', address: '', 
 
 export default function ClientMasterPage() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   // 請求書/見積書の編集画面から「新規登録」で遷移してきた場合、保存後に戻る先(例: /invoices/3)。
   const returnTo = searchParams.get('returnTo')
@@ -86,7 +87,9 @@ export default function ClientMasterPage() {
       reset(emptyValues)
       setEditingId(null)
       if (returnTo) {
-        window.location.href = `${returnTo}?selectedClientId=${saved.id}`
+        // SPA設計との一貫性のため、フルページリロードを伴うwindow.location.hrefではなく
+        // React Routerのクライアントサイド遷移を使う(レビュー指摘11対応)。
+        navigate(`${returnTo}?selectedClientId=${saved.id}`)
       }
     },
   })

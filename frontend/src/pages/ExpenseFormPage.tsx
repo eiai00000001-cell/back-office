@@ -84,8 +84,10 @@ export default function ExpenseFormPage() {
     }
   }
 
+  const finalCategory = categorySelect === 'その他' ? customCategory : categorySelect
+  const isSaveDisabled = saveMutation.isPending || !expenseDate || !finalCategory || amount === '' || Number(amount) <= 0
+
   const handleSave = () => {
-    const finalCategory = categorySelect === 'その他' ? customCategory : categorySelect
     if (!finalCategory) {
       setErrorMessage('勘定科目を選択してください')
       return
@@ -209,7 +211,7 @@ export default function ExpenseFormPage() {
         </Card>
 
         <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
-          <Button variant="contained" onClick={handleSave} disabled={saveMutation.isPending}>
+          <Button variant="contained" onClick={handleSave} disabled={isSaveDisabled}>
             保存
           </Button>
         </Stack>

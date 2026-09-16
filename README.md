@@ -3,13 +3,14 @@
 ## 1. 文書情報
 
 - 作成日: 2026-09-16
-- 版数: 1.0(実装フェーズ初版)
+- 版数: 1.1(レビュー指摘対応版)
 - 参照元:
   - `docs/02_architect/詳細設計書.md`(版数1.1)
   - `docs/02_architect/基本設計書.md`(版数1.2)
   - `docs/02_architect/mockups/`(SC-01〜SC-11)
   - `docs/01_requirements/機能仕様書.md`(版数1.1)・`要件定義書.md`(版数1.1)
-- 対応イテレーション: イテレーション1(初回実装)
+  - `docs/03_develop/レビュー結果報告書.md`(版数1.0)
+- 対応イテレーション: イテレーション1(初回実装、レビュー指摘対応を含む)
 
 ---
 
@@ -53,10 +54,10 @@ back-office/
     data/attachments/          … (未使用。実際の添付ファイルは3.3節参照)
   frontend/                 … React + TypeScript(Vite)
     src/
-      api/                    … Axiosベースのバックエンド呼び出し
-      pages/                   … SC-01〜SC-11に対応する11画面
+      api/                    … Axiosベースのバックエンド呼び出し(`__tests__/`にVitestテスト)
+      pages/                   … SC-01〜SC-11に対応する11画面(`__tests__/`にVitest+Testing Libraryのコンポーネントテスト)
       components/               … 共通コンポーネント(ヘッダー・品目明細エディタ)
-      utils/                      … 税計算(サーバー側ロジックのミラー)・表示フォーマット
+      utils/                      … 税計算(サーバー側ロジックのミラー)・表示フォーマット(`__tests__/`にVitestテスト)
       types/                       … 型定義・列挙値・日本語ラベル
   db/                       … SQLiteファイル配置先(`back_office.db`、gitignore対象)
   data/attachments/expenses/ … 領収書添付ファイル配置先(gitignore対象、3.3節参照)
@@ -146,14 +147,14 @@ cd frontend && npx vitest run
 ### 5.1 バックエンド(pytest)
 
 - 実行コマンド: `backend/.venv/bin/python -m pytest -q`
-- 結果: **108 passed**(TDDによる単体テスト76件相当+APIレベル結合テスト、失敗0件)
-- 内訳(主なテスト対象): `TaxCalculationService`・`NumberingService`・`PaymentService`(入金ステータス・期限超過判定・入金登録)・`InvoiceService`・`QuoteService`・`QuoteToInvoiceConversionService`(1対1制約・独立性)・`ExpenseService`・`AttachmentService`(拡張子・サイズ検証)・`HomeSummaryService`・`PdfGenerationService`(WeasyPrint実PDF生成)・`ClientService`・`CompanyProfileService`、および全ルーターのAPI結合テスト(clients/company-profile/invoices/quotes/expenses/payments/home/health)
+- 結果: **127 passed**(TDDによる単体テスト+APIレベル結合テスト、失敗0件)
+- 内訳(主なテスト対象): `TaxCalculationService`・`NumberingService`・`PaymentService`(入金ステータス・期限超過判定・入金登録)・`InvoiceService`・`QuoteService`・`QuoteToInvoiceConversionService`(1対1制約・独立性)・`ExpenseService`(期間From/Toバリデーションを含む)・`AttachmentService`(拡張子・サイズ検証、パストラバーサル拒否、添付ファイル削除)・`HomeSummaryService`・`PdfGenerationService`(WeasyPrint実PDF生成)・`ClientService`・`CompanyProfileService`、`main.py`の例外ハンドラ(バリデーションエラーの日本語メッセージ整形・予期しない例外のログ記録)、および全ルーターのAPI結合テスト(clients/company-profile/invoices/quotes/expenses/payments/home/health)
 
 ### 5.2 フロントエンド(Vitest)
 
 - 実行コマンド: `frontend && npx vitest run`
-- 結果: **13 passed**(失敗0件)
-- 内訳: `calculateTotals`/`calculateItemAmount`(サーバー側`TaxCalculationService`と同一ロジックのフロントエンド版、詳細設計書4.1ステップ6のリアルタイム表示要件に対応)、`formatCurrency`/`isOverdueDate`(表示フォーマット共通処理)
+- 結果: **26 passed**(失敗0件)
+- 内訳: `calculateTotals`/`calculateItemAmount`(サーバー側`TaxCalculationService`と同一ロジックのフロントエンド版、詳細設計書4.1ステップ6のリアルタイム表示要件に対応)、`formatCurrency`/`isOverdueDate`(表示フォーマット共通処理)、`extractErrorMessage`(配列形式detailへの防御的処理)、`InvoiceDetailPage`(保存・入金登録・超過確認ダイアログのコンポーネントテスト)、`ExpenseFormPage`(添付ファイル検証・保存ボタン活性制御のコンポーネントテスト)
 
 ### 5.3 TypeScriptビルド・ESLint相当
 
@@ -171,6 +172,10 @@ cd frontend && npx vitest run
 | 3 | データベースマイグレーション | Alembicでスキーマ変更履歴を管理(基本設計書2.1章) | Alembicの初期マイグレーション(`backend/alembic/versions/`)を作成し、`company_profile`への初期データ投入(詳細設計書6.3章)もマイグレーション内で実施。加えて`main.py`起動時に`Base.metadata.create_all()`を安全網として実行(冪等) | 単一ユーザーの個人利用アプリという性質上、開発時の取り回しやすさを優先し、Alembicの初回マイグレーション整備と並行してcreate_all()による自動テーブル作成も残した。今後のスキーマ変更は新規Alembicリビジョンとして追加する運用を想定。 |
 | 4 | フロントエンドのフォーム実装 | 明記なし(React Hook Form + Zodを採用技術として選定、基本設計書2.1章) | 取引先マスタ・システム設定画面はReact Hook Form + Zodで実装。請求書・見積書・経費の画面は、品目明細の動的な行追加・削除を伴う複雑なフォームのため、Reactの`useState`による素朴な状態管理で実装 | RHFのフィールド配列(useFieldArray)を用いた実装も可能だが、開発規模とのバランスを考慮し、複雑な動的配列フォームは素朴な状態管理を採用した。挙動・バリデーション内容は詳細設計書3章の入力項目定義表に準拠している。 |
 | 5 | SC-09売掛金一覧の「入金済み金額」列 | API設計(7章)の`InvoiceListItemResponse`に入金済み金額は明記なし | `InvoiceListItemResponse`に`paid_amount`(入金済み金額の合計)を追加 | 基本設計書4.10章の画面レイアウトおよびmockup(SC-09)に「入金済み金額」列が明記されているため、API設計を実装レベルで補完した。仕様の追加ではなく、既存の確定仕様(mockup)をAPIに反映したものである。 |
+
+### 6.1 運用ルール: Alembicと`create_all()`の併用について
+
+`main.py`の`Base.metadata.create_all(bind=engine)`は「存在しないテーブルを作成する」だけであり、既存テーブルへのカラム追加・型変更等は一切反映しない。そのため、**今後のイテレーションでSQLAlchemyモデルに変更(カラム追加・型変更・制約変更等)を加える場合は、必ず対応するAlembicリビジョンを`backend/alembic/versions/`に追加すること**を運用ルールとして明文化する(レビュー結果報告書 指摘5対応)。`create_all()`はあくまで初回セットアップ時の安全網であり、スキーマ変更の管理主体はAlembicとする。リビジョン追加を怠ると、アプリのコードが期待するスキーマと実際のDBスキーマが起動時エラーにならずに静かに乖離し、該当カラムへのアクセス時点で初めて例外になるおそれがある。
 
 ---
 
@@ -193,3 +198,4 @@ cd frontend && npx vitest run
 | 版数 | 日付 | 内容 | 対応イテレーション |
 |---|---|---|---|
 | 1.0 | 2026-09-16 | 初版作成。詳細設計書1.1・基本設計書1.2・mockups(SC-01〜SC-11)をもとに、バックエンド(FastAPI、4層構成、8テーブル、29+1 APIエンドポイント、TDDによるpytestテスト108件)・フロントエンド(React 18 + TS + Vite + MUI、全11画面、Vitestテスト13件)・起動/終了.appのビルド一式を実装。 | イテレーション1(初回) |
+| 1.1 | 2026-09-16 | `docs/03_develop/レビュー結果報告書.md`(版数1.0)の指摘のうちコード修正で対応可能な11件(高2件・中4件・低5件)に対応。主な内容: (1)バリデーションエラー時の422応答を単一の日本語文字列`detail`に整形する`RequestValidationError`ハンドラを追加し、`InvoiceItemInput`等の主要スキーマにField(description=...)の代替となる`field_validator`を追加、フロントエンド`extractErrorMessage()`に配列形式detailへの防御的処理を追加、`ItemsEditor`利用画面(請求書/見積書)に保存前チェック・保存ボタン活性制御を追加。(2)経費領収書アップロードのパストラバーサル対策(`AttachmentService`にファイル名検証を追加)。(3)予期しない例外を`logging.exception`でUvicornエラーログへ記録。(4)経費一覧の期間(From/To)バリデーションをフロント・バックエンド双方に追加。(5)Alembic運用ルールを本書6.1節に明文化。(6)`InvoiceDetailPage`・`ExpenseFormPage`にTesting Libraryによるコンポーネントテストを追加。(8)`InvoiceRepository.exists_by_source_quote_id`に設計書対応関係のコメントを追加。(9)`ItemsEditor`の行`key`を`crypto.randomUUID()`ベースの安定IDに変更。(10)経費削除時に添付ファイル実体も削除する処理を追加。(11)`ClientMasterPage`の呼び出し元復帰遷移を`useNavigate()`によるクライアントサイド遷移に置き換え。バックエンド127件・フロントエンド26件のテストが全件成功することを確認済み。指摘7(`backend/data/attachments/.gitkeep`削除)・指摘12(詳細設計書パス記載更新)は対象外(前者はファイル削除のためユーザー許可待ち、後者はarchitectフェーズ対応)。 | イテレーション1(レビュー指摘対応) |

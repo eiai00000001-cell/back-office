@@ -61,8 +61,14 @@ def update_expense(
 
 
 @router.delete("/{expense_id}", status_code=204)
-def delete_expense(expense_id: int, service: ExpenseService = Depends(get_expense_service)):
+def delete_expense(
+    expense_id: int,
+    service: ExpenseService = Depends(get_expense_service),
+    attachment_service: AttachmentService = Depends(get_attachment_service),
+):
     service.delete_expense(expense_id)
+    # DBレコード削除に合わせて添付ファイル実体も削除し、孤立ファイルの蓄積を防ぐ(レビュー指摘10対応)。
+    attachment_service.delete_all(expense_id)
     return Response(status_code=204)
 
 

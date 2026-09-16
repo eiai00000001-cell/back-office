@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from decimal import Decimal, InvalidOperation
+
+from pydantic import BaseModel, Field, field_validator
 
 from app.enums import ExpenseTaxCategory, PaymentMethod
 
@@ -11,6 +13,33 @@ class ExpenseCreateRequest(BaseModel):
     payee: str | None = Field(default=None, max_length=100)
     payment_method: PaymentMethod | None = None
     memo: str | None = Field(default=None, max_length=500)
+
+    # レビュー指摘1対応: Field(description=...)は実際のエラーメッセージにならないため、
+    # mode="before"バリデータで詳細設計書3.6章の日本語メッセージを明示的に返す。
+    @field_validator("expense_date", mode="before")
+    @classmethod
+    def validate_expense_date_presence(cls, value: object) -> object:
+        if not isinstance(value, str) or value.strip() == "":
+            raise ValueError("発生日を入力してください")
+        return value
+
+    @field_validator("account_category", mode="before")
+    @classmethod
+    def validate_account_category_presence(cls, value: object) -> object:
+        if not isinstance(value, str) or value.strip() == "":
+            raise ValueError("勘定科目を選択してください")
+        return value
+
+    @field_validator("amount", mode="before")
+    @classmethod
+    def validate_amount_positive(cls, value: object) -> object:
+        try:
+            decimal_value = Decimal(str(value))
+        except (InvalidOperation, TypeError, ValueError) as exc:
+            raise ValueError("金額は0より大きい数値で入力してください") from exc
+        if decimal_value <= 0 or decimal_value >= 10**10:
+            raise ValueError("金額は0より大きい数値で入力してください")
+        return value
 
 
 class ExpenseUpdateRequest(ExpenseCreateRequest):

@@ -26,12 +26,38 @@ interface ItemsEditorProps {
   onChange: (items: ItemInput[]) => void
 }
 
-const emptyItem = (): ItemInput => ({
+// crypto.randomUUID()による一時的な安定ID。フォーム上でのみ使用し、保存ペイロードには
+// 実質的な意味を持たない(バックエンドは未知のフィールドを無視する)。
+// レビュー指摘9対応: 行削除・並べ替え時に配列インデックスをkeyに使わないようにするため。
+export const createEmptyItem = (): ItemInput => ({
   item_name: '',
   quantity: 1,
   unit_price: 0,
   tax_category: 'STANDARD_10',
+  clientKey: crypto.randomUUID(),
 })
+
+// 詳細設計書3.3章・8章の入力項目定義表に基づく保存前チェック(レビュー指摘1対応)。
+// InvoiceDetailPage・QuoteDetailPageから保存前チェック・保存ボタンの活性制御に使用する。
+export function validateItems(items: ItemInput[]): string | null {
+  if (items.length === 0) {
+    return '品目明細を1件以上入力してください'
+  }
+  for (const item of items) {
+    if (!item.item_name || item.item_name.trim() === '') {
+      return '品目名を入力してください'
+    }
+    if (!Number.isFinite(item.quantity) || item.quantity <= 0) {
+      return '数量は0より大きい数値で入力してください'
+    }
+    if (!Number.isFinite(item.unit_price) || item.unit_price <= 0) {
+      return '単価は0より大きい数値で入力してください'
+    }
+  }
+  return null
+}
+
+const emptyItem = createEmptyItem
 
 export default function ItemsEditor({ items, onChange }: ItemsEditorProps) {
   const totals = calculateTotals(items)
@@ -68,7 +94,7 @@ export default function ItemsEditor({ items, onChange }: ItemsEditorProps) {
         </TableHead>
         <TableBody>
           {items.map((item, index) => (
-            <TableRow key={index}>
+            <TableRow key={item.clientKey ?? index}>
               <TableCell>
                 <TextField
                   size="small"

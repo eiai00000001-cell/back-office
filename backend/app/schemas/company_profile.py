@@ -12,6 +12,15 @@ class CompanyProfileUpdateRequest(BaseModel):
     contact_info: str | None = Field(default=None, max_length=200)
     invoice_registration_number: str | None = Field(default=None)
 
+    # レビュー指摘1対応: Field(description=...)は実際のエラーメッセージにならないため、
+    # mode="before"バリデータで詳細設計書の日本語メッセージを明示的に返す。
+    @field_validator("name", mode="before")
+    @classmethod
+    def validate_name_presence(cls, value: object) -> object:
+        if not isinstance(value, str) or value.strip() == "":
+            raise ValueError("氏名を入力してください")
+        return value
+
     @field_validator("invoice_registration_number")
     @classmethod
     def validate_registration_number(cls, value: str | None) -> str | None:

@@ -1,7 +1,7 @@
 import pytest
 
 from app.enums import ExpenseTaxCategory, PaymentMethod
-from app.exceptions import NotFoundError
+from app.exceptions import NotFoundError, ValidationFailedError
 from app.repositories.expense_repository import ExpenseRepository
 from app.schemas.expense import ExpenseCreateRequest
 from app.services.expense_service import ExpenseService
@@ -49,6 +49,18 @@ class TestListExpenses:
         filtered = service.list_expenses(account_category="通信費")
         assert len(filtered) == 1
         assert filtered[0].account_category == "通信費"
+
+    def test_raises_when_date_from_is_after_date_to(self, db_session):
+        """詳細設計書3.6章: 期間(From/To)「FromがToより後の場合エラー」(レビュー指摘4対応)。"""
+        service = ExpenseService(ExpenseRepository(db_session))
+        with pytest.raises(ValidationFailedError):
+            service.list_expenses(date_from="2026-09-30", date_to="2026-09-01")
+
+    def test_allows_date_from_equal_to_date_to(self, db_session):
+        service = ExpenseService(ExpenseRepository(db_session))
+        service.create_expense(_valid_dto(expense_date="2026-09-12"))
+        result = service.list_expenses(date_from="2026-09-12", date_to="2026-09-12")
+        assert len(result) == 1
 
 
 class TestUpdateExpense:

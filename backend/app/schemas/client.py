@@ -12,6 +12,15 @@ class ClientCreateRequest(BaseModel):
     contact_person: str | None = Field(default=None, max_length=50)
     contact_info: str | None = Field(default=None, max_length=200)
 
+    # レビュー指摘1対応: Field(description=...)は実際のエラーメッセージにならないため、
+    # mode="before"バリデータで詳細設計書の日本語メッセージを明示的に返す。
+    @field_validator("name", mode="before")
+    @classmethod
+    def validate_name_presence(cls, value: object) -> object:
+        if not isinstance(value, str) or value.strip() == "":
+            raise ValueError("名称を入力してください")
+        return value
+
     @field_validator("postal_code")
     @classmethod
     def validate_postal_code(cls, value: str | None) -> str | None:

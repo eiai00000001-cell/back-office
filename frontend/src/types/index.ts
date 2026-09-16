@@ -55,6 +55,9 @@ export interface ItemInput {
   quantity: number
   unit_price: number
   tax_category: TaxCategory
+  // フロントエンドのみで使用する一時的な安定ID(React keyの安定化用、レビュー指摘9対応)。
+  // バックエンドへの送信時は未知のフィールドとして無視される。
+  clientKey?: string
 }
 
 export interface ItemResponse extends ItemInput {

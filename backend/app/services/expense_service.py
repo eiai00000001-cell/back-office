@@ -1,7 +1,7 @@
 """経費管理(F-02)。詳細設計書4.2章。"""
 from datetime import datetime
 
-from app.exceptions import NotFoundError
+from app.exceptions import NotFoundError, ValidationFailedError
 from app.models.expense import Expense
 from app.repositories.expense_repository import ExpenseRepository
 from app.schemas.expense import CategorySummaryItem, ExpenseCreateRequest, ExpenseUpdateRequest, MonthSummaryItem
@@ -63,6 +63,10 @@ class ExpenseService:
         date_from: str | None = None,
         date_to: str | None = None,
     ) -> list[Expense]:
+        # 詳細設計書3.6章: 期間(From/To)の入力項目定義表「FromがToより後の場合エラー」
+        # (レビュー指摘4対応)。
+        if date_from and date_to and date_from > date_to:
+            raise ValidationFailedError("期間(From)は期間(To)より前の日付を入力してください")
         return self.expense_repository.list_all(
             account_category=account_category,
             payment_method=payment_method,

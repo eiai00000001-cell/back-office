@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -28,6 +29,9 @@ export default function ExpenseListPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
+  // 詳細設計書3.6章: 期間(From/To)「FromがToより後の場合エラー」(レビュー指摘4対応)。
+  const dateRangeError = dateFrom && dateTo && dateFrom > dateTo ? '期間(From)は期間(To)より前の日付を入力してください' : null
+
   const filters = useMemo(
     () => ({
       account_category: accountCategory || undefined,
@@ -37,7 +41,11 @@ export default function ExpenseListPage() {
     }),
     [accountCategory, paymentMethod, dateFrom, dateTo]
   )
-  const { data: expenses } = useQuery({ queryKey: ['expenses', filters], queryFn: () => expensesApi.list(filters) })
+  const { data: expenses } = useQuery({
+    queryKey: ['expenses', filters],
+    queryFn: () => expensesApi.list(filters),
+    enabled: !dateRangeError,
+  })
 
   return (
     <Box>
@@ -46,6 +54,11 @@ export default function ExpenseListPage() {
         <Typography variant="h5" sx={{ mb: 2 }}>
           経費一覧・検索
         </Typography>
+        {dateRangeError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {dateRangeError}
+          </Alert>
+        )}
         <Card variant="outlined" sx={{ p: 2.5 }}>
           <Toolbar disableGutters sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 2 }}>
             <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-end' }}>

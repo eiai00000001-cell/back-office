@@ -41,6 +41,11 @@ class InvoiceRepository:
         self.session.flush()
 
     def exists_by_source_quote_id(self, quote_id: int) -> bool:
+        # 詳細設計書5.3章のメソッド一覧・4.4章シーケンス図に記載されている存在チェック用メソッド。
+        # 実装上、QuoteToInvoiceConversionServiceは変換済み請求書の番号を確認メッセージに含める
+        # 必要があるため、存在有無だけでなくレコード自体を取得できる find_by_source_quote_id を
+        # 代わりに使用している(実質的に本メソッドの用途を包含する)。設計書との対応関係を明確に
+        # するため、デッドコードとして削除せずコメント付きで残す(レビュー指摘8対応)。
         stmt = select(Invoice.id).where(Invoice.source_quote_id == quote_id)
         return self.session.execute(stmt).scalar_one_or_none() is not None
 

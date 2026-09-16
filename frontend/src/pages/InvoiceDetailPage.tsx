@@ -14,19 +14,12 @@ import {
 import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
-import ItemsEditor from '../components/ItemsEditor'
+import ItemsEditor, { createEmptyItem, validateItems } from '../components/ItemsEditor'
 import { clientsApi } from '../api/clients'
 import { invoicesApi, type InvoicePayload } from '../api/invoices'
 import { extractErrorMessage } from '../api/client'
 import type { ItemInput } from '../types'
 import { formatCurrency } from '../utils/format'
-
-const emptyItem = (): ItemInput => ({
-  item_name: '',
-  quantity: 1,
-  unit_price: 0,
-  tax_category: 'STANDARD_10',
-})
 
 export default function InvoiceDetailPage() {
   const { id } = useParams()
@@ -45,7 +38,7 @@ export default function InvoiceDetailPage() {
   const [clientId, setClientId] = useState<number | null>(null)
   const [issueDate, setIssueDate] = useState('')
   const [dueDate, setDueDate] = useState('')
-  const [items, setItems] = useState<ItemInput[]>([emptyItem()])
+  const [items, setItems] = useState<ItemInput[]>([createEmptyItem()])
   const [remarks, setRemarks] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -58,7 +51,7 @@ export default function InvoiceDetailPage() {
       setClientId(invoice.client_id)
       setIssueDate(invoice.issue_date ?? '')
       setDueDate(invoice.due_date ?? '')
-      setItems(invoice.items.map((i) => ({ ...i })))
+      setItems(invoice.items.map((i) => ({ ...i, clientKey: String(i.id) })))
       setRemarks(invoice.remarks ?? '')
     }
   }, [invoice])
@@ -106,9 +99,15 @@ export default function InvoiceDetailPage() {
     },
   })
 
+  const itemsErrorMessage = validateItems(items)
+
   const handleSave = () => {
     if (clientId === null) {
       setErrorMessage('取引先を選択してください')
+      return
+    }
+    if (itemsErrorMessage) {
+      setErrorMessage(itemsErrorMessage)
       return
     }
     saveMutation.mutate({
@@ -231,7 +230,11 @@ export default function InvoiceDetailPage() {
               PDF出力
             </Button>
           )}
-          <Button variant="contained" onClick={handleSave} disabled={saveMutation.isPending}>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={saveMutation.isPending || clientId === null || !!itemsErrorMessage}
+          >
             保存
           </Button>
         </Stack>

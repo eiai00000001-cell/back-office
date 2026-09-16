@@ -15,19 +15,12 @@ import {
 import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
-import ItemsEditor from '../components/ItemsEditor'
+import ItemsEditor, { createEmptyItem, validateItems } from '../components/ItemsEditor'
 import { clientsApi } from '../api/clients'
 import { quotesApi, type QuotePayload } from '../api/quotes'
 import { extractErrorMessage } from '../api/client'
 import { QUOTE_STATUS_LABELS, type ItemInput, type QuoteStatus } from '../types'
 import { QUOTE_STATUS_COLORS } from '../theme'
-
-const emptyItem = (): ItemInput => ({
-  item_name: '',
-  quantity: 1,
-  unit_price: 0,
-  tax_category: 'STANDARD_10',
-})
 
 export default function QuoteDetailPage() {
   const { id } = useParams()
@@ -47,7 +40,7 @@ export default function QuoteDetailPage() {
   const [issueDate, setIssueDate] = useState('')
   const [expiryDate, setExpiryDate] = useState('')
   const [status, setStatus] = useState<QuoteStatus>('DRAFT')
-  const [items, setItems] = useState<ItemInput[]>([emptyItem()])
+  const [items, setItems] = useState<ItemInput[]>([createEmptyItem()])
   const [remarks, setRemarks] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -57,7 +50,7 @@ export default function QuoteDetailPage() {
       setIssueDate(quote.issue_date ?? '')
       setExpiryDate(quote.expiry_date ?? '')
       setStatus(quote.status)
-      setItems(quote.items.map((i) => ({ ...i })))
+      setItems(quote.items.map((i) => ({ ...i, clientKey: String(i.id) })))
       setRemarks(quote.remarks ?? '')
     }
   }, [quote])
@@ -88,9 +81,15 @@ export default function QuoteDetailPage() {
     },
   })
 
+  const itemsErrorMessage = validateItems(items)
+
   const handleSave = () => {
     if (clientId === null) {
       setErrorMessage('取引先を選択してください')
+      return
+    }
+    if (itemsErrorMessage) {
+      setErrorMessage(itemsErrorMessage)
       return
     }
     saveMutation.mutate({
@@ -184,7 +183,11 @@ export default function QuoteDetailPage() {
               </Button>
             </>
           )}
-          <Button variant="contained" onClick={handleSave} disabled={saveMutation.isPending}>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={saveMutation.isPending || clientId === null || !!itemsErrorMessage}
+          >
             保存
           </Button>
         </Stack>

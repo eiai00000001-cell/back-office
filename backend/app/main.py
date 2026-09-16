@@ -1,4 +1,7 @@
+import logging
+
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -6,6 +9,8 @@ from app.config import STATIC_DIR
 from app.database import Base, engine
 from app.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.routers import clients, company_profile, expenses, health, home, invoices, payments, quotes
+
+logger = logging.getLogger("app")
 
 app = FastAPI(title="EIAI TEC 事務管理システム")
 
@@ -36,8 +41,30 @@ async def handle_conflict_error(request: Request, exc: ConflictError):
     return JSONResponse(status_code=409, content={"detail": str(exc)})
 
 
+@app.exception_handler(RequestValidationError)
+async def handle_request_validation_error(request: Request, exc: RequestValidationError):
+    # FastAPI/Pydantic v2は標準では{"detail": [{"type":..., "loc":..., "msg":...}, ...]}という
+    # 配列形式で返すが、フロントエンドは detail: string を前提としているため単一の文字列に変換する
+    # (レビュー指摘1対応)。各スキーマのフィールドバリデータが raise ValueError(日本語メッセージ) した場合、
+    # Pydanticはmsgを"Value error, <メッセージ>"の形に整形するため、そのプレフィックスは取り除く。
+    message = "入力内容を確認してください"
+    errors = exc.errors()
+    if errors:
+        raw_message = str(errors[0].get("msg", ""))
+        prefix = "Value error, "
+        message = raw_message[len(prefix):] if raw_message.startswith(prefix) else raw_message
+        if not message:
+            message = "入力内容を確認してください"
+    return JSONResponse(status_code=422, content={"detail": message})
+
+
 @app.exception_handler(Exception)
 async def handle_unexpected_error(request: Request, exc: Exception):
+    # 障害調査ができるよう、Uvicornの標準エラーログ(logs/uvicorn.log)へトレースバックを記録する
+    # (レビュー指摘3対応)。
+    logger.exception(
+        "Unhandled exception while processing %s %s", request.method, request.url.path, exc_info=exc
+    )
     return JSONResponse(
         status_code=500,
         content={"detail": "処理に失敗しました。しばらくしてから再度お試しください"},
