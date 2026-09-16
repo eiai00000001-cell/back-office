@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams, Link as RouterLink } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
 import ItemsEditor, { createEmptyItem, validateItems } from '../components/ItemsEditor'
@@ -26,6 +26,8 @@ export default function InvoiceDetailPage() {
   const isNew = id === undefined || id === 'new'
   const invoiceId = isNew ? undefined : Number(id)
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const queryClient = useQueryClient()
 
   const { data: clients } = useQuery({ queryKey: ['clients'], queryFn: clientsApi.list })
@@ -55,6 +57,18 @@ export default function InvoiceDetailPage() {
       setRemarks(invoice.remarks ?? '')
     }
   }, [invoice])
+
+  // 取引先マスタ画面(SC-10)で新規登録し、呼び出し元へ戻ってきた場合に選択状態を復元する
+  useEffect(() => {
+    const selectedClientId = searchParams.get('selectedClientId')
+    if (selectedClientId) {
+      setClientId(Number(selectedClientId))
+      const next = new URLSearchParams(searchParams)
+      next.delete('selectedClientId')
+      setSearchParams(next, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   const saveMutation = useMutation({
     mutationFn: (payload: InvoicePayload) =>
@@ -153,15 +167,24 @@ export default function InvoiceDetailPage() {
         <Card variant="outlined" sx={{ p: 2.5, mb: 2.5 }}>
           <Typography sx={{ fontWeight: 600, mb: 1.5, pb: 1, borderBottom: '1px solid #dde1e6' }}>基本情報</Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <Autocomplete
-              sx={{ flex: 1 }}
-              options={clients ?? []}
-              getOptionLabel={(option) => option.name}
-              value={clients?.find((c) => c.id === clientId) ?? null}
-              onChange={(_, value) => setClientId(value ? value.id : null)}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => <TextField {...params} label="取引先" />}
-            />
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Autocomplete
+                sx={{ flex: 1 }}
+                options={clients ?? []}
+                getOptionLabel={(option) => option.name}
+                value={clients?.find((c) => c.id === clientId) ?? null}
+                onChange={(_, value) => setClientId(value ? value.id : null)}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={(params) => <TextField {...params} label="取引先" />}
+              />
+              <MuiLink
+                component={RouterLink}
+                to={`/clients?returnTo=${encodeURIComponent(location.pathname)}`}
+                sx={{ whiteSpace: 'nowrap', fontSize: 13 }}
+              >
+                新規登録
+              </MuiLink>
+            </Box>
             <TextField label="発行日" type="date" InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
             <TextField label="支払期限" type="date" InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </Stack>

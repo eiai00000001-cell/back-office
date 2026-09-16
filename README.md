@@ -153,8 +153,8 @@ cd frontend && npx vitest run
 ### 5.2 フロントエンド(Vitest)
 
 - 実行コマンド: `frontend && npx vitest run`
-- 結果: **26 passed**(失敗0件)
-- 内訳: `calculateTotals`/`calculateItemAmount`(サーバー側`TaxCalculationService`と同一ロジックのフロントエンド版、詳細設計書4.1ステップ6のリアルタイム表示要件に対応)、`formatCurrency`/`isOverdueDate`(表示フォーマット共通処理)、`extractErrorMessage`(配列形式detailへの防御的処理)、`InvoiceDetailPage`(保存・入金登録・超過確認ダイアログのコンポーネントテスト)、`ExpenseFormPage`(添付ファイル検証・保存ボタン活性制御のコンポーネントテスト)
+- 結果: **30 passed**(失敗0件)
+- 内訳: `calculateTotals`/`calculateItemAmount`(サーバー側`TaxCalculationService`と同一ロジックのフロントエンド版、詳細設計書4.1ステップ6のリアルタイム表示要件に対応)、`formatCurrency`/`isOverdueDate`(表示フォーマット共通処理)、`extractErrorMessage`(配列形式detailへの防御的処理)、`InvoiceDetailPage`(保存・入金登録・超過確認ダイアログ・取引先「新規登録」リンク遷移・`selectedClientId`復帰のコンポーネントテスト)、`QuoteDetailPage`(取引先「新規登録」リンク遷移・`selectedClientId`復帰のコンポーネントテスト)、`ExpenseFormPage`(添付ファイル検証・保存ボタン活性制御のコンポーネントテスト)
 
 ### 5.3 TypeScriptビルド・ESLint相当
 
@@ -199,3 +199,4 @@ cd frontend && npx vitest run
 |---|---|---|---|
 | 1.0 | 2026-09-16 | 初版作成。詳細設計書1.1・基本設計書1.2・mockups(SC-01〜SC-11)をもとに、バックエンド(FastAPI、4層構成、8テーブル、29+1 APIエンドポイント、TDDによるpytestテスト108件)・フロントエンド(React 18 + TS + Vite + MUI、全11画面、Vitestテスト13件)・起動/終了.appのビルド一式を実装。 | イテレーション1(初回) |
 | 1.1 | 2026-09-16 | `docs/03_develop/レビュー結果報告書.md`(版数1.0)の指摘のうちコード修正で対応可能な11件(高2件・中4件・低5件)に対応。主な内容: (1)バリデーションエラー時の422応答を単一の日本語文字列`detail`に整形する`RequestValidationError`ハンドラを追加し、`InvoiceItemInput`等の主要スキーマにField(description=...)の代替となる`field_validator`を追加、フロントエンド`extractErrorMessage()`に配列形式detailへの防御的処理を追加、`ItemsEditor`利用画面(請求書/見積書)に保存前チェック・保存ボタン活性制御を追加。(2)経費領収書アップロードのパストラバーサル対策(`AttachmentService`にファイル名検証を追加)。(3)予期しない例外を`logging.exception`でUvicornエラーログへ記録。(4)経費一覧の期間(From/To)バリデーションをフロント・バックエンド双方に追加。(5)Alembic運用ルールを本書6.1節に明文化。(6)`InvoiceDetailPage`・`ExpenseFormPage`にTesting Libraryによるコンポーネントテストを追加。(8)`InvoiceRepository.exists_by_source_quote_id`に設計書対応関係のコメントを追加。(9)`ItemsEditor`の行`key`を`crypto.randomUUID()`ベースの安定IDに変更。(10)経費削除時に添付ファイル実体も削除する処理を追加。(11)`ClientMasterPage`の呼び出し元復帰遷移を`useNavigate()`によるクライアントサイド遷移に置き換え。バックエンド127件・フロントエンド26件のテストが全件成功することを確認済み。指摘7(`backend/data/attachments/.gitkeep`削除)・指摘12(詳細設計書パス記載更新)は対象外(前者はファイル削除のためユーザー許可待ち、後者はarchitectフェーズ対応)。 | イテレーション1(レビュー指摘対応) |
+| 1.2 | 2026-09-16 | `docs/04_test/テスト結果報告書.md`(版数1.0)で不合格となったTC-C06(重大度: 高、取引先マスタ画面SC-10への遷移導線欠落)に対応。詳細設計書3.3章・3.5章およびmockup(SC-03/SC-05)のとおり、`InvoiceDetailPage.tsx`・`QuoteDetailPage.tsx`の取引先選択欄(`Autocomplete`)の隣に「新規登録」インラインリンク(`/clients?returnTo=<現在のパス>`へ遷移)を追加し、`ClientMasterPage.tsx`側の既存の呼び出し元復帰ロジック(`?selectedClientId=<id>`付きでの復帰)に対応する形で、両画面に`selectedClientId`クエリパラメータ受け取り時の取引先選択状態復元処理を追加した。TDD方針に基づき、先にコンポーネントテスト(`InvoiceDetailPage.test.tsx`へのテスト追加2件、新規`QuoteDetailPage.test.tsx`2件)をRed状態で作成してから実装し、Green化を確認した。バックエンド127件(影響なし・変更なし)・フロントエンド30件(既存26件+新規4件)のテストが全件成功。単一機能に閉じたフロントエンドの結線修正のため、設計整合性への影響はなく、reviewerへの再レビュー依頼は不要と判断し、testerの実機再確認に委ねる。 | イテレーション1(テスト指摘対応) |

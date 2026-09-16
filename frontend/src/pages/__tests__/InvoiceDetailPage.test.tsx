@@ -58,11 +58,11 @@ const buildInvoice = (overrides: Partial<Invoice> = {}): Invoice => ({
   ...overrides,
 })
 
-function renderInvoiceDetailPage(invoiceId = '1') {
+function renderInvoiceDetailPage(initialPath = '/invoices/1') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/invoices/${invoiceId}`]}>
+      <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
         </Routes>
@@ -137,5 +137,30 @@ describe('InvoiceDetailPage', () => {
       1,
       expect.objectContaining({ amount: 400000, force: true })
     )
+  })
+
+  it('取引先選択欄に「新規登録」リンクがあり、取引先マスタ画面(returnTo付き)へ遷移する', async () => {
+    mockedInvoicesApi.get.mockResolvedValue(buildInvoice())
+
+    renderInvoiceDetailPage('/invoices/1')
+
+    await screen.findByDisplayValue('Webサイト制作作業')
+
+    const newClientLink = screen.getByRole('link', { name: '新規登録' })
+    expect(newClientLink).toHaveAttribute('href', `/clients?returnTo=${encodeURIComponent('/invoices/1')}`)
+  })
+
+  it('取引先マスタ画面から selectedClientId 付きで戻ると、当該取引先が選択済みになる', async () => {
+    mockedInvoicesApi.get.mockResolvedValue(buildInvoice())
+    mockedClientsApi.list.mockResolvedValue([
+      ...sampleClients,
+      { id: 9, name: '新規取引先株式会社', postal_code: null, address: null, contact_person: null, contact_info: null },
+    ])
+
+    renderInvoiceDetailPage('/invoices/1?selectedClientId=9')
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('取引先')).toHaveValue('新規取引先株式会社')
+    })
   })
 })
