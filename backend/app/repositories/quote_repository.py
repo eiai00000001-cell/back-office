@@ -1,6 +1,7 @@
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.models.invoice import Invoice
 from app.models.quote import Quote
 from app.models.quote_item import QuoteItem
 
@@ -59,3 +60,41 @@ class QuoteRepository:
         for item in items:
             quote.items.append(item)
         self.session.flush()
+
+    def aggregate_count_and_amount_by_issue_month(self, date_from: str, date_to: str) -> list[tuple[str, int, int]]:
+        """財務ダッシュボード(F-07)向け月次見積件数・金額集計。詳細設計書4.8.5章。
+
+        issue_dateがNULLの見積書は集計対象に含めない。
+        """
+        year_month = func.strftime("%Y-%m", Quote.issue_date)
+        stmt = (
+            select(year_month, func.count(Quote.id), func.coalesce(func.sum(Quote.total_amount), 0))
+            .where(Quote.issue_date.is_not(None))
+            .where(Quote.issue_date >= date_from)
+            .where(Quote.issue_date <= date_to)
+            .group_by(year_month)
+            .order_by(year_month)
+        )
+        return list(self.session.execute(stmt).all())
+
+    def count_in_period(self, date_from: str, date_to: str) -> int:
+        """財務ダッシュボード(F-07)向け見積成約率の分母。詳細設計書4.8.5章。"""
+        stmt = (
+            select(func.count(Quote.id))
+            .where(Quote.issue_date.is_not(None))
+            .where(Quote.issue_date >= date_from)
+            .where(Quote.issue_date <= date_to)
+        )
+        return self.session.execute(stmt).scalar_one()
+
+    def count_converted_in_period(self, date_from: str, date_to: str) -> int:
+        """財務ダッシュボード(F-07)向け見積成約率の分子(変換済み件数)。詳細設計書4.8.5章。"""
+        converted = exists().where(Invoice.source_quote_id == Quote.id)
+        stmt = (
+            select(func.count(Quote.id))
+            .where(Quote.issue_date.is_not(None))
+            .where(Quote.issue_date >= date_from)
+            .where(Quote.issue_date <= date_to)
+            .where(converted)
+        )
+        return self.session.execute(stmt).scalar_one()

@@ -9,6 +9,7 @@ const NAV_CARDS = [
   { to: '/expenses', name: '経費管理', desc: '経費の登録・集計' },
   { to: '/quotes', name: '見積書', desc: '見積書の作成・請求書への変換' },
   { to: '/receivables', name: '売掛金', desc: '入金状況・未入金の確認' },
+  { to: '/dashboard', name: '財務ダッシュボード', desc: '売上・経費・損益・見積状況の可視化' },
 ]
 
 export default function HomePage() {

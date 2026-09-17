@@ -12,6 +12,7 @@ from app.repositories.quote_repository import QuoteRepository
 from app.services.attachment_service import AttachmentService
 from app.services.client_service import ClientService
 from app.services.company_profile_service import CompanyProfileService
+from app.services.dashboard_service import DashboardService
 from app.services.expense_service import ExpenseService
 from app.services.home_summary_service import HomeSummaryService
 from app.services.invoice_service import InvoiceService
@@ -77,3 +78,9 @@ def get_home_summary_service(db: Session = Depends(get_db)) -> HomeSummaryServic
 
 def get_pdf_generation_service(db: Session = Depends(get_db)) -> PdfGenerationService:
     return PdfGenerationService(CompanyProfileRepository(db))
+
+
+def get_dashboard_service(db: Session = Depends(get_db)) -> DashboardService:
+    return DashboardService(
+        InvoiceRepository(db), PaymentRepository(db), ExpenseRepository(db), QuoteRepository(db)
+    )

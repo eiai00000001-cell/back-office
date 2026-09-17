@@ -172,3 +172,41 @@ export interface HomeSummary {
   unpaid_count: number
   overdue_count: number
 }
+
+// 財務ダッシュボード(F-07、SC-12、イテレーション2)向け型定義
+
+export interface DashboardMonthlyAmount {
+  month: string
+  amount: number
+}
+
+export interface DashboardQuoteMonthlySummary {
+  month: string
+  count: number
+  total_amount: number
+}
+
+export interface DashboardCategorySummary {
+  account_category: string
+  count: number
+  total_amount: number
+}
+
+export interface SalesAndPaymentsSummary {
+  sales: DashboardMonthlyAmount[]
+  payments: DashboardMonthlyAmount[]
+}
+
+export interface DashboardExpenseSummary {
+  monthly: DashboardMonthlyAmount[]
+  by_category: DashboardCategorySummary[]
+}
+
+export interface ProfitLossSummary {
+  monthly: DashboardMonthlyAmount[]
+}
+
+export interface QuoteStatusSummary {
+  monthly: DashboardQuoteMonthlySummary[]
+  conversion_rate: number | null
+}

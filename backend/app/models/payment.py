@@ -9,6 +9,7 @@ class Payment(Base):
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_payments_amount"),
         Index("idx_payments_invoice_id", "invoice_id"),
+        Index("idx_payments_payment_date", "payment_date"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

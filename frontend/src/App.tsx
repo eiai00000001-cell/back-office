@@ -10,6 +10,7 @@ import ExpenseSummaryPage from './pages/ExpenseSummaryPage'
 import ReceivableListPage from './pages/ReceivableListPage'
 import ClientMasterPage from './pages/ClientMasterPage'
 import SettingsPage from './pages/SettingsPage'
+import DashboardPage from './pages/DashboardPage'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/receivables" element={<ReceivableListPage />} />
       <Route path="/clients" element={<ClientMasterPage />} />
       <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
     </Routes>
   )
 }

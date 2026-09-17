@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import STATIC_DIR
 from app.database import Base, engine
 from app.exceptions import ConflictError, NotFoundError, ValidationFailedError
-from app.routers import clients, company_profile, expenses, health, home, invoices, payments, quotes
+from app.routers import clients, company_profile, dashboard, expenses, health, home, invoices, payments, quotes
 
 logger = logging.getLogger("app")
 
@@ -24,6 +24,7 @@ app.include_router(quotes.router)
 app.include_router(expenses.router)
 app.include_router(payments.router)
 app.include_router(home.router)
+app.include_router(dashboard.router)
 
 
 @app.exception_handler(ValidationFailedError)

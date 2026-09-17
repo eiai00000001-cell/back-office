@@ -6,7 +6,10 @@ from app.database import Base
 
 class Invoice(Base):
     __tablename__ = "invoices"
-    __table_args__ = (Index("idx_invoices_client_id", "client_id"),)
+    __table_args__ = (
+        Index("idx_invoices_client_id", "client_id"),
+        Index("idx_invoices_issue_date", "issue_date"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     invoice_number: Mapped[str] = mapped_column(String, nullable=False, unique=True)

@@ -9,6 +9,7 @@ class Quote(Base):
     __table_args__ = (
         CheckConstraint("status IN ('DRAFT','CONFIRMED')", name="ck_quotes_status"),
         Index("idx_quotes_client_id", "client_id"),
+        Index("idx_quotes_issue_date", "issue_date"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

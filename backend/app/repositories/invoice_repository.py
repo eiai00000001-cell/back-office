@@ -70,3 +70,19 @@ class InvoiceRepository:
         for item in items:
             invoice.items.append(item)
         self.session.flush()
+
+    def aggregate_total_by_issue_month(self, date_from: str, date_to: str) -> list[tuple[str, int]]:
+        """財務ダッシュボード(F-07)向け月次売上集計。詳細設計書4.8.2章。
+
+        issue_dateがNULLの請求書(F-04変換直後、4.4章)は発行日が確定するまで集計対象に含めない。
+        """
+        year_month = func.strftime("%Y-%m", Invoice.issue_date)
+        stmt = (
+            select(year_month, func.coalesce(func.sum(Invoice.total_amount), 0))
+            .where(Invoice.issue_date.is_not(None))
+            .where(Invoice.issue_date >= date_from)
+            .where(Invoice.issue_date <= date_to)
+            .group_by(year_month)
+            .order_by(year_month)
+        )
+        return list(self.session.execute(stmt).all())

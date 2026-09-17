@@ -27,3 +27,15 @@ class PaymentRepository:
     def sum_by_invoice(self, invoice_id: int) -> int:
         stmt = select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.invoice_id == invoice_id)
         return self.session.execute(stmt).scalar_one()
+
+    def aggregate_amount_by_payment_month(self, date_from: str, date_to: str) -> list[tuple[str, int]]:
+        """財務ダッシュボード(F-07)向け月次入金額集計(参考指標)。詳細設計書4.8.2章。"""
+        year_month = func.strftime("%Y-%m", Payment.payment_date)
+        stmt = (
+            select(year_month, func.coalesce(func.sum(Payment.amount), 0))
+            .where(Payment.payment_date >= date_from)
+            .where(Payment.payment_date <= date_to)
+            .group_by(year_month)
+            .order_by(year_month)
+        )
+        return list(self.session.execute(stmt).all())
