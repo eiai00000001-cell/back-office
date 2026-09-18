@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-15 案件詳細・編集 - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;--color-warn-bg:#fdecea;--color-soon:#b45309;--color-soon-bg:#fff4e0;--radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 16px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;}
+.filter-bar .field{display:flex;flex-direction:column;gap:4px;}
+.filter-bar label{font-size:12px;color:var(--color-text-sub);}
+select,input[type=text],input[type=date],textarea{padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;font-family:inherit;background:#fff;}
+select{min-width:160px;}
+.btn{display:inline-block;padding:8px 16px;border-radius:4px;border:1px solid var(--color-border);background:#fff;color:var(--color-text);font-size:13px;cursor:pointer;text-decoration:none;font-family:inherit;}
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-dark);}
+.btn-small{padding:4px 10px;font-size:12px;}
+.btn-danger{color:var(--color-accent);border-color:var(--color-accent);}
+.tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--color-border);}
+.tabs a{padding:8px 22px;text-decoration:none;color:var(--color-text-sub);font-size:14px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tabs a.active{color:var(--color-primary);border-bottom-color:var(--color-primary);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:left;font-size:13px;}
+th{background:#eef1f4;color:var(--color-text-sub);font-weight:600;white-space:nowrap;}
+td.amount{text-align:right;white-space:nowrap;}
+tr.row-link{cursor:pointer;}
+tr.row-link:hover{background:#f7f9fa;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap;}
+.st-NS{background:#6b7280;}.st-IP{background:#1d4ed8;}.st-WR{background:#b45309;}.st-DN{background:#15803d;}
+.badge-unpaid{background:#b91c1c;}.badge-partial{background:#b45309;}.badge-paid{background:#15803d;}
+.badge-draft{background:#6b7280;}.badge-confirmed{background:#1d4ed8;}
+.due-over{color:var(--color-accent);font-weight:700;}
+.due-soon{color:var(--color-soon);font-weight:700;}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:700;margin-left:6px;}
+.tag-over{background:var(--color-accent);color:#fff;}
+.tag-soon{background:var(--color-soon);color:#fff;}
+.muted{color:var(--color-text-sub);}
+.section-title{font-size:15px;font-weight:600;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--color-border);}
+.form-grid{display:grid;grid-template-columns:140px 1fr;gap:14px 16px;align-items:start;}
+.form-grid label{font-size:13px;color:var(--color-text-sub);padding-top:8px;}
+.form-grid input[type=text],.form-grid select,.form-grid textarea{width:100%;max-width:520px;}
+.form-grid input[type=date]{width:200px;}
+textarea{min-height:70px;resize:vertical;}
+.actions-bar{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;}
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.sum{background:#f4f6f8;border-radius:5px;padding:12px 16px;}
+.sum .l{font-size:12px;color:var(--color-text-sub);}.sum .n{font-size:20px;font-weight:700;}
+.dialog{border:1px solid var(--color-border);background:#fafbfc;border-radius:var(--radius);padding:16px;max-width:800px;}
+.dlg-title{font-weight:600;margin-bottom:10px;}
+.dlg-warn{background:#fdf6ec;border:1px solid #ecd9b0;color:#8a5a00;border-radius:4px;padding:8px 12px;margin:12px 0;font-size:13px;}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">事務管理システム</div>
+  <a href="./SC-13_project-list.html" class="back-link">← 案件一覧へ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">案件詳細・編集</h1>
+  <div class="card">
+    <div class="section-title">案件情報</div>
+    <div class="form-grid">
+      <label>案件名 <span style="color:#c0392b;">*</span></label>
+      <input type="text" value="自社サイトリニューアル" maxlength="100">
+      <label>取引先</label>
+      <select><option selected>株式会社サンプル商事</option><option>山田デザイン事務所</option><option>合同会社テストワークス</option></select>
+      <label>ステータス <span style="color:#c0392b;">*</span></label>
+      <select><option>未着手</option><option selected>進行中</option><option>確認待ち</option><option>完了</option></select>
+      <label>納期</label>
+      <div><input type="date" value="2026-09-10"> <span class="tag tag-over">超過</span> <span class="muted" style="font-size:12px;">任意。過去日も入力できます</span></div>
+      <label>概要メモ</label>
+      <textarea placeholder="任意で概要を入力(最大1000文字)">コーポレートサイトの全面リニューアル。デザイン確認後に公開予定。</textarea>
+    </div>
+    <div class="actions-bar">
+      <button class="btn btn-danger">削除</button>
+      <button class="btn btn-primary">保存</button>
+    </div>
+    <!-- 新規作成時は「削除」ボタンを表示しない(既存案件のみ) -->
+  </div>
+
+  <div class="card">
+    <div class="section-title">集計サマリー</div>
+    <div class="sum-grid">
+      <div class="sum"><div class="l">見積書(2件)</div><div class="n">440,000円</div></div>
+      <div class="sum"><div class="l">請求書(1件)</div><div class="n">330,000円</div></div>
+      <div class="sum"><div class="l">入金済み金額</div><div class="n" style="color:#15803d;">0円</div></div>
+      <div class="sum"><div class="l">未回収金額</div><div class="n" style="color:var(--color-accent);">330,000円</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">紐付いた見積書 <button class="btn btn-small btn-primary">見積書を紐付ける</button></div>
+    <table><thead><tr><th>見積書番号</th><th>発行日</th><th>有効期限</th><th style="text-align:right;">合計金額</th><th>ステータス</th><th>操作</th></tr></thead>
+    <tbody><tr class="row-link" onclick="location.href='./SC-05_quote-detail.html'"><td>2026-0004</td><td>2026-07-25</td><td>2026-08-25</td><td class="amount">330,000円</td><td><span class="badge badge-confirmed">確定</span></td><td onclick="event.stopPropagation()"><button class="btn btn-small">紐付けを解除</button></td></tr><tr class="row-link" onclick="location.href='./SC-05_quote-detail.html'"><td>2026-0006</td><td>2026-09-12</td><td>2026-10-12</td><td class="amount">110,000円</td><td><span class="badge badge-draft">作成中</span></td><td onclick="event.stopPropagation()"><button class="btn btn-small">紐付けを解除</button></td></tr></tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">紐付いた請求書 <button class="btn btn-small btn-primary">請求書を紐付ける</button></div>
+    <table><thead><tr><th>請求書番号</th><th>発行日</th><th>支払期限</th><th style="text-align:right;">合計金額</th><th>入金ステータス</th><th>操作</th></tr></thead>
+    <tbody><tr class="row-link" onclick="location.href='./SC-03_invoice-detail.html'"><td>2026-0004</td><td>2026-08-01</td><td>2026-08-31 <span class="tag tag-over">超過</span></td><td class="amount">330,000円</td><td><span class="badge badge-unpaid">未入金</span></td><td onclick="event.stopPropagation()"><button class="btn btn-small">紐付けを解除</button></td></tr></tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="section-title">書類の紐付けダイアログ(「請求書を紐付ける」押下時の表示例)</div>
+    <div class="dialog">
+      <div class="dlg-title">請求書を選択してください</div>
+      <table><thead><tr><th style="width:40px;"></th><th>請求書番号</th><th>取引先名</th><th style="text-align:right;">合計金額</th><th>現在の案件</th></tr></thead>
+      <tbody>
+        <tr><td><input type="radio" name="d"></td><td>2026-0003</td><td>山田デザイン事務所</td><td class="amount">88,000円</td><td class="muted">店舗パンフレット制作</td></tr>
+        <tr><td><input type="radio" name="d"></td><td>2026-0002</td><td>合同会社テストワークス</td><td class="amount">165,000円</td><td class="muted">(案件なし)</td></tr>
+        <tr><td><input type="radio" name="d" checked></td><td>2026-0001</td><td>株式会社サンプル商事</td><td class="amount">55,000円</td><td class="muted">ロゴデザイン制作(完了)</td></tr>
+      </tbody></table>
+      <div class="dlg-warn">案件「ロゴデザイン制作」から移動します。よろしいですか?</div>
+      <div class="actions-bar" style="margin:0;"><button class="btn">キャンセル</button><button class="btn btn-primary">紐付ける</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">削除確認メッセージ(「削除」押下時の表示例)</div>
+    <div class="dialog" style="max-width:520px;">
+      <div class="dlg-title">この案件を削除します。紐付いている見積書・請求書・経費は削除されず、「案件なし」に戻ります。</div>
+      <div class="actions-bar" style="margin:0;"><button class="btn">キャンセル</button><button class="btn btn-danger">削除する</button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

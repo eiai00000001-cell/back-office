@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-14 案件カンバン - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;--color-warn-bg:#fdecea;--color-soon:#b45309;--color-soon-bg:#fff4e0;--radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 16px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;}
+.filter-bar .field{display:flex;flex-direction:column;gap:4px;}
+.filter-bar label{font-size:12px;color:var(--color-text-sub);}
+select,input[type=text],input[type=date],textarea{padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;font-family:inherit;background:#fff;}
+select{min-width:160px;}
+.btn{display:inline-block;padding:8px 16px;border-radius:4px;border:1px solid var(--color-border);background:#fff;color:var(--color-text);font-size:13px;cursor:pointer;text-decoration:none;font-family:inherit;}
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-dark);}
+.btn-small{padding:4px 10px;font-size:12px;}
+.btn-danger{color:var(--color-accent);border-color:var(--color-accent);}
+.tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--color-border);}
+.tabs a{padding:8px 22px;text-decoration:none;color:var(--color-text-sub);font-size:14px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tabs a.active{color:var(--color-primary);border-bottom-color:var(--color-primary);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:left;font-size:13px;}
+th{background:#eef1f4;color:var(--color-text-sub);font-weight:600;white-space:nowrap;}
+td.amount{text-align:right;white-space:nowrap;}
+tr.row-link{cursor:pointer;}
+tr.row-link:hover{background:#f7f9fa;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap;}
+.st-NS{background:#6b7280;}.st-IP{background:#1d4ed8;}.st-WR{background:#b45309;}.st-DN{background:#15803d;}
+.badge-unpaid{background:#b91c1c;}.badge-partial{background:#b45309;}.badge-paid{background:#15803d;}
+.badge-draft{background:#6b7280;}.badge-confirmed{background:#1d4ed8;}
+.due-over{color:var(--color-accent);font-weight:700;}
+.due-soon{color:var(--color-soon);font-weight:700;}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:700;margin-left:6px;}
+.tag-over{background:var(--color-accent);color:#fff;}
+.tag-soon{background:var(--color-soon);color:#fff;}
+.muted{color:var(--color-text-sub);}
+.section-title{font-size:15px;font-weight:600;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--color-border);}
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--color-text-sub);margin-bottom:12px;align-items:center;}
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start;}
+.kcol{background:#e9edf1;border-radius:var(--radius);padding:10px;min-height:320px;}
+.kcol:nth-child(3){outline:2px dashed var(--color-primary);outline-offset:-2px;background:#e1eef5;}
+.khead{color:#fff;font-weight:700;font-size:14px;padding:6px 12px;border-radius:4px;margin-bottom:10px;display:flex;justify-content:space-between;}
+.kcount{background:rgba(255,255,255,.28);border-radius:10px;padding:0 9px;font-size:12px;}
+.kcard{background:#fff;border:1px solid var(--color-border);border-left:4px solid var(--color-border);border-radius:5px;padding:10px 10px 8px 6px;margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;cursor:grab;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.kcard:hover{box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.kcard.over{border-left-color:var(--color-accent);background:var(--color-warn-bg);}
+.kcard.soon{border-left-color:var(--color-soon);background:var(--color-soon-bg);}
+.grip{color:#9aa3ad;font-size:14px;line-height:1.2;letter-spacing:-2px;writing-mode:vertical-rl;user-select:none;}
+.kbody{flex:1;min-width:0;}
+.kname{font-weight:600;font-size:13px;}
+.kclient{font-size:12px;color:var(--color-text-sub);}
+.kdue{font-size:12px;margin-top:4px;}
+.stmenu{min-width:0;width:100%;font-size:11px;padding:3px 6px;color:var(--color-text-sub);}
+.kdrop{border:2px dashed #b9c3cc;border-radius:5px;text-align:center;color:#8a95a0;font-size:12px;padding:8px;}
+.kcol:nth-child(3) .kdrop{border-color:var(--color-primary);color:var(--color-primary);background:#fff;}
+.drag-note{margin-top:20px;display:flex;align-items:center;gap:16px;font-size:12px;}
+.kcard.dragging{width:260px;margin:0;transform:rotate(2deg);box-shadow:0 8px 20px rgba(0,0,0,.25);border-left-color:var(--color-primary);}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">事務管理システム</div>
+  <a href="./SC-01_home.html" class="back-link">← ホームへ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">案件</h1>
+  <div class="tabs">
+    <a href="./SC-13_project-list.html">一覧</a>
+    <a href="./SC-14_project-kanban.html" class="active">カンバン</a>
+  </div>
+  <div class="toolbar">
+    <div class="filter-bar"><div class="field"><label>取引先</label>
+      <select><option>すべて</option><option>株式会社サンプル商事</option><option>山田デザイン事務所</option><option>合同会社テストワークス</option></select></div></div>
+    <a href="./SC-15_project-detail.html" class="btn btn-primary">新規案件</a>
+  </div>
+  <div class="legend">
+    <span>カードをつかんで別の列へドラッグすると、ステータスが変わります(カード内の「ステータス変更」メニューでも変更できます)。</span>
+    <span><span class="tag tag-over" style="margin:0">超過</span> 納期を過ぎた案件(完了以外)</span>
+    <span><span class="tag tag-soon" style="margin:0">接近</span> 納期まで7日以内(完了以外)</span>
+  </div>
+  <div class="kanban">
+    <div class="kcol"><div class="khead st-NS">未着手<span class="kcount">2</span></div>
+      <div class="kcard" draggable="true" onclick="location.href='./SC-15_project-detail.html'">
+        <div class="grip" title="ドラッグして別の列へ移動">⋮⋮</div>
+        <div class="kbody"><div class="kname">ECサイト保守対応</div><div class="kclient">合同会社テストワークス</div><div class="kdue">納期: 2026-10-15</div></div>
+        <select class="stmenu" title="ステータス変更" onclick="event.stopPropagation()"><option selected>ステータス変更</option><option>未着手</option><option>進行中</option><option>確認待ち</option><option>完了</option></select>
+      </div>
+      <div class="kcard" draggable="true" onclick="location.href='./SC-15_project-detail.html'">
+        <div class="grip" title="ドラッグして別の列へ移動">⋮⋮</div>
+        <div class="kbody"><div class="kname">社内向け資料作成</div><div class="kclient">(取引先なし)</div><div class="kdue"><span class="muted">納期: 未設定</span></div></div>
+        <select class="stmenu" title="ステータス変更" onclick="event.stopPropagation()"><option selected>ステータス変更</option><option>未着手</option><option>進行中</option><option>確認待ち</option><option>完了</option></select>
+      </div>
+      <div class="kdrop">ここにドロップ</div>
+    </div>
+    <div class="kcol"><div class="khead st-IP">進行中<span class="kcount">2</span></div>
+      <div class="kcard over" draggable="true" onclick="location.href='./SC-15_project-detail.html'">
+        <div class="grip" title="ドラッグして別の列へ移動">⋮⋮</div>
+        <div class="kbody"><div class="kname">自社サイトリニューアル</div><div class="kclient">株式会社サンプル商事</div><div class="kdue">納期: <span class="due-over">2026-09-10</span><span class="tag tag-over">超過</span></div></div>
+        <select class="stmenu" title="ステータス変更" onclick="event.stopPropagation()"><option selected>ステータス変更</option><option>未着手</option><option>進行中</option><option>確認待ち</option><option>完了</option></select>
+      </div>
+      <div class="kcard" draggable="true" onclick="location.href='./SC-15_project-detail.html'">
+        <div class="grip" title="ドラッグして別の列へ移動">⋮⋮</div>
+        <div class="kbody"><div class="kname">業務システム改修</div><div class="kclient">株式会社サンプル商事</div><div class="kdue">納期: 2026-11-30</div></div>
+        <select class="stmenu" title="ステータス変更" onclick="event.stopPropagation()"><option selected>ステータス変更</option><option>未着手</option><option>進行中</option><option>確認待ち</option><option>完了</option></select>
+      </div>
+      <div class="kdrop">ここにドロップ</div>
+    </div>
+    <div class="kcol"><div class="khead st-WR">確認待ち<span class="kcount">1</span></div>
+      <div class="kcard soon" draggable="true" onclick="location.href='./SC-15_project-detail.html'">
+        <div class="grip" title="ドラッグして別の列へ移動">⋮⋮</div>
+        <div class="kbody"><div class="kname">店舗パンフレット制作</div><div class="kclient">山田デザイン事務所</div><div class="kdue">納期: <span class="due-soon">2026-09-24</span><span class="tag tag-soon">接近</span></div></div>
+        <select class="stmenu" title="ステータス変更" onclick="event.stopPropagation()"><option selected>ステータス変更</option><option>未着手</option><option>進行中</option><option>確認待ち</option><option>完了</option></select>
+      </div>
+      <div class="kdrop">ここにドロップ</div>
+    </div>
+    <div class="kcol"><div class="khead st-DN">完了<span class="kcount">1</span></div>
+      <div class="kcard" draggable="true" onclick="location.href='./SC-15_project-detail.html'">
+        <div class="grip" title="ドラッグして別の列へ移動">⋮⋮</div>
+        <div class="kbody"><div class="kname">ロゴデザイン制作</div><div class="kclient">山田デザイン事務所</div><div class="kdue">納期: 2026-08-20</div></div>
+        <select class="stmenu" title="ステータス変更" onclick="event.stopPropagation()"><option selected>ステータス変更</option><option>未着手</option><option>進行中</option><option>確認待ち</option><option>完了</option></select>
+      </div>
+      <div class="kdrop">ここにドロップ</div>
+    </div>
+  </div>
+  <!-- ドラッグ中の表示例(実装時に@hello-pangea/dndが付与する状態のイメージ) -->
+  <div class="drag-note">
+    <div class="kcard dragging"><div class="grip">⋮⋮</div><div class="kbody"><div class="kname">店舗パンフレット制作</div><div class="kclient">山田デザイン事務所</div><div class="kdue">納期: 2026-09-24</div></div></div>
+    <span class="muted">← ドラッグ中の見え方の例(浮き上がり・傾き表示。移動先の列は枠が強調されます)</span>
+  </div>
+</div>
+</body>
+</html>

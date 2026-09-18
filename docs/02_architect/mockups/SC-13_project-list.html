@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-13 案件一覧 - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;--color-warn-bg:#fdecea;--color-soon:#b45309;--color-soon-bg:#fff4e0;--radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 16px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;}
+.filter-bar .field{display:flex;flex-direction:column;gap:4px;}
+.filter-bar label{font-size:12px;color:var(--color-text-sub);}
+select,input[type=text],input[type=date],textarea{padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;font-family:inherit;background:#fff;}
+select{min-width:160px;}
+.btn{display:inline-block;padding:8px 16px;border-radius:4px;border:1px solid var(--color-border);background:#fff;color:var(--color-text);font-size:13px;cursor:pointer;text-decoration:none;font-family:inherit;}
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-dark);}
+.btn-small{padding:4px 10px;font-size:12px;}
+.btn-danger{color:var(--color-accent);border-color:var(--color-accent);}
+.tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--color-border);}
+.tabs a{padding:8px 22px;text-decoration:none;color:var(--color-text-sub);font-size:14px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tabs a.active{color:var(--color-primary);border-bottom-color:var(--color-primary);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:left;font-size:13px;}
+th{background:#eef1f4;color:var(--color-text-sub);font-weight:600;white-space:nowrap;}
+td.amount{text-align:right;white-space:nowrap;}
+tr.row-link{cursor:pointer;}
+tr.row-link:hover{background:#f7f9fa;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap;}
+.st-NS{background:#6b7280;}.st-IP{background:#1d4ed8;}.st-WR{background:#b45309;}.st-DN{background:#15803d;}
+.badge-unpaid{background:#b91c1c;}.badge-partial{background:#b45309;}.badge-paid{background:#15803d;}
+.badge-draft{background:#6b7280;}.badge-confirmed{background:#1d4ed8;}
+.due-over{color:var(--color-accent);font-weight:700;}
+.due-soon{color:var(--color-soon);font-weight:700;}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:700;margin-left:6px;}
+.tag-over{background:var(--color-accent);color:#fff;}
+.tag-soon{background:var(--color-soon);color:#fff;}
+.muted{color:var(--color-text-sub);}
+.section-title{font-size:15px;font-weight:600;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--color-border);}
+tr.overdue{background:var(--color-warn-bg);}tr.overdue td:first-child{border-left:3px solid var(--color-accent);}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">事務管理システム</div>
+  <a href="./SC-01_home.html" class="back-link">← ホームへ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">案件</h1>
+  <div class="tabs">
+    <a href="./SC-13_project-list.html" class="active">一覧</a>
+    <a href="./SC-14_project-kanban.html">カンバン</a>
+  </div>
+  <div class="card">
+    <div class="toolbar">
+      <div class="filter-bar">
+        <div class="field"><label>ステータス</label>
+          <select><option>すべて</option><option>未着手</option><option>進行中</option><option>確認待ち</option><option>完了</option></select></div>
+        <div class="field"><label>取引先</label>
+          <select><option>すべて</option><option>株式会社サンプル商事</option><option>山田デザイン事務所</option><option>合同会社テストワークス</option></select></div>
+      </div>
+      <a href="./SC-15_project-detail.html" class="btn btn-primary">新規案件</a>
+    </div>
+    <p class="muted" style="font-size:12px;margin:0 0 10px;">納期の近い順(納期未設定は末尾)で表示しています。</p>
+    <table>
+      <thead><tr><th>案件名</th><th>取引先名</th><th>ステータス</th><th>納期</th><th>紐付け件数(見積 / 請求)</th></tr></thead>
+      <tbody>
+        <tr class="row-link overdue" onclick="location.href='./SC-15_project-detail.html'">
+          <td>自社サイトリニューアル</td><td>株式会社サンプル商事</td><td><span class="badge st-IP">進行中</span></td>
+          <td><span class="due-over">2026-09-10</span><span class="tag tag-over">超過</span></td><td>見積2件 / 請求1件</td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-15_project-detail.html'">
+          <td>店舗パンフレット制作</td><td>山田デザイン事務所</td><td><span class="badge st-WR">確認待ち</span></td>
+          <td><span class="due-soon">2026-09-24</span><span class="tag tag-soon">接近</span></td><td>見積1件 / 請求1件</td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-15_project-detail.html'">
+          <td>ECサイト保守対応</td><td>合同会社テストワークス</td><td><span class="badge st-NS">未着手</span></td>
+          <td>2026-10-15</td><td>見積1件 / 請求0件</td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-15_project-detail.html'">
+          <td>業務システム改修</td><td>株式会社サンプル商事</td><td><span class="badge st-IP">進行中</span></td>
+          <td>2026-11-30</td><td>見積1件 / 請求0件</td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-15_project-detail.html'">
+          <td>ロゴデザイン制作</td><td>山田デザイン事務所</td><td><span class="badge st-DN">完了</span></td>
+          <td>2026-08-20</td><td>見積1件 / 請求1件</td>
+        </tr>
+        <tr class="row-link" onclick="location.href='./SC-15_project-detail.html'">
+          <td>社内向け資料作成</td><td><span class="muted">(取引先なし)</span></td><td><span class="badge st-NS">未着手</span></td>
+          <td><span class="muted">未設定</span></td><td>見積0件 / 請求0件</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>
