@@ -13,6 +13,7 @@ from app.schemas.project import ProjectLinkRequest
 from app.services.attachment_service import AttachmentService
 from app.services.expense_service import ExpenseService
 from app.services.project_link_service import ProjectLinkService
+from app.schemas.common import EntityId
 
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
 
@@ -51,20 +52,20 @@ def get_expense_summary(
 
 
 @router.get("/{expense_id}", response_model=ExpenseResponse)
-def get_expense(expense_id: int, service: ExpenseService = Depends(get_expense_service)):
+def get_expense(expense_id: EntityId, service: ExpenseService = Depends(get_expense_service)):
     return service.get_expense(expense_id)
 
 
 @router.put("/{expense_id}", response_model=ExpenseResponse)
 def update_expense(
-    expense_id: int, dto: ExpenseUpdateRequest, service: ExpenseService = Depends(get_expense_service)
+    expense_id: EntityId, dto: ExpenseUpdateRequest, service: ExpenseService = Depends(get_expense_service)
 ):
     return service.update_expense(expense_id, dto)
 
 
 @router.delete("/{expense_id}", status_code=204)
 def delete_expense(
-    expense_id: int,
+    expense_id: EntityId,
     service: ExpenseService = Depends(get_expense_service),
     attachment_service: AttachmentService = Depends(get_attachment_service),
 ):
@@ -76,7 +77,7 @@ def delete_expense(
 
 @router.put("/{expense_id}/project", response_model=ExpenseResponse)
 def link_expense_project(
-    expense_id: int,
+    expense_id: EntityId,
     dto: ProjectLinkRequest,
     link_service: ProjectLinkService = Depends(get_project_link_service),
 ):
@@ -85,7 +86,7 @@ def link_expense_project(
 
 @router.post("/{expense_id}/attachment", response_model=ExpenseResponse)
 async def upload_attachment(
-    expense_id: int,
+    expense_id: EntityId,
     file: UploadFile,
     service: ExpenseService = Depends(get_expense_service),
     attachment_service: AttachmentService = Depends(get_attachment_service),
@@ -102,7 +103,7 @@ async def upload_attachment(
 
 @router.get("/{expense_id}/attachment")
 def get_attachment(
-    expense_id: int,
+    expense_id: EntityId,
     service: ExpenseService = Depends(get_expense_service),
     attachment_service: AttachmentService = Depends(get_attachment_service),
 ):

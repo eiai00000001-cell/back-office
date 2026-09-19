@@ -16,6 +16,7 @@ import { useLocation, useNavigate, useParams, useSearchParams, Link as RouterLin
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
 import ProjectSelect from '../components/ProjectSelect'
+import { toItemInputs } from '../utils/items'
 import ItemsEditor, { createEmptyItem, validateItems } from '../components/ItemsEditor'
 import { clientsApi } from '../api/clients'
 import { quotesApi, type QuotePayload } from '../api/quotes'
@@ -54,7 +55,7 @@ export default function QuoteDetailPage() {
       setIssueDate(quote.issue_date ?? '')
       setExpiryDate(quote.expiry_date ?? '')
       setStatus(quote.status)
-      setItems(quote.items.map((i) => ({ ...i, clientKey: String(i.id) })))
+      setItems(toItemInputs(quote.items))
       setRemarks(quote.remarks ?? '')
       setProjectId(quote.project_id)
     }

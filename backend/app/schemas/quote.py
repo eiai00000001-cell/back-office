@@ -2,16 +2,17 @@ from pydantic import BaseModel, Field
 
 from app.enums import QuoteStatus
 from app.schemas.invoice import InvoiceItemInput, InvoiceItemResponse
+from app.schemas.common import EntityId
 
 
 class QuoteCreateRequest(BaseModel):
-    client_id: int
+    client_id: EntityId
     issue_date: str | None = None
     expiry_date: str | None = None
     status: QuoteStatus = QuoteStatus.DRAFT
     items: list[InvoiceItemInput]
     remarks: str | None = Field(default=None, max_length=1000)
-    project_id: int | None = None
+    project_id: EntityId | None = None
 
 
 class QuoteUpdateRequest(QuoteCreateRequest):

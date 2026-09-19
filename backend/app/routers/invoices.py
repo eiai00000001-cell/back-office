@@ -13,6 +13,7 @@ from app.services.invoice_service import InvoiceService
 from app.services.payment_service import PaymentService
 from app.services.pdf_generation_service import PdfGenerationService
 from app.services.project_link_service import ProjectLinkService
+from app.schemas.common import EntityId
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
@@ -58,7 +59,7 @@ def _to_list_item(invoice, payment_service: PaymentService) -> InvoiceListItemRe
 
 @router.get("", response_model=list[InvoiceListItemResponse])
 def list_invoices(
-    client_id: int | None = None,
+    client_id: EntityId | None = None,
     payment_status: PaymentStatus | None = None,
     service: InvoiceService = Depends(get_invoice_service),
     payment_service: PaymentService = Depends(get_payment_service),
@@ -82,7 +83,7 @@ def create_invoice(
 
 @router.get("/{invoice_id}", response_model=InvoiceResponse)
 def get_invoice(
-    invoice_id: int,
+    invoice_id: EntityId,
     service: InvoiceService = Depends(get_invoice_service),
     payment_service: PaymentService = Depends(get_payment_service),
 ):
@@ -92,7 +93,7 @@ def get_invoice(
 
 @router.put("/{invoice_id}", response_model=InvoiceResponse)
 def update_invoice(
-    invoice_id: int,
+    invoice_id: EntityId,
     dto: InvoiceUpdateRequest,
     service: InvoiceService = Depends(get_invoice_service),
     payment_service: PaymentService = Depends(get_payment_service),
@@ -102,14 +103,14 @@ def update_invoice(
 
 
 @router.delete("/{invoice_id}", status_code=204)
-def delete_invoice(invoice_id: int, service: InvoiceService = Depends(get_invoice_service)):
+def delete_invoice(invoice_id: EntityId, service: InvoiceService = Depends(get_invoice_service)):
     service.delete_invoice(invoice_id)
     return Response(status_code=204)
 
 
 @router.get("/{invoice_id}/pdf")
 def get_invoice_pdf(
-    invoice_id: int,
+    invoice_id: EntityId,
     service: InvoiceService = Depends(get_invoice_service),
     pdf_service: PdfGenerationService = Depends(get_pdf_generation_service),
 ):
@@ -124,7 +125,7 @@ def get_invoice_pdf(
 
 @router.put("/{invoice_id}/project", response_model=InvoiceResponse)
 def link_invoice_project(
-    invoice_id: int,
+    invoice_id: EntityId,
     dto: ProjectLinkRequest,
     link_service: ProjectLinkService = Depends(get_project_link_service),
     payment_service: PaymentService = Depends(get_payment_service),

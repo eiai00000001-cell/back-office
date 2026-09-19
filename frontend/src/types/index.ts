@@ -78,8 +78,12 @@ export interface ItemInput {
   clientKey?: string
 }
 
-export interface ItemResponse extends ItemInput {
+// APIレスポンスの品目明細。quantityはDecimal型のためJSONでは文字列("1.00")で返る。
+// フォームへ取り込む際は utils/items.ts の toItemInputs で数値へ正規化する。
+export interface ItemResponse extends Omit<ItemInput, 'quantity' | 'unit_price'> {
   id: number
+  quantity: number | string
+  unit_price: number | string
   amount: number
   sort_order: number
 }

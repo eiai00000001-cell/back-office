@@ -6,13 +6,14 @@ from app.repositories.payment_repository import PaymentRepository
 from app.schemas.payment import PaymentCreateRequest, PaymentResponse
 from app.services.invoice_service import InvoiceService
 from app.services.payment_service import PaymentService
+from app.schemas.common import EntityId
 
 router = APIRouter(prefix="/api", tags=["payments"])
 
 
 @router.get("/invoices/{invoice_id}/payments", response_model=list[PaymentResponse])
 def list_payments(
-    invoice_id: int,
+    invoice_id: EntityId,
     invoice_service: InvoiceService = Depends(get_invoice_service),
     payment_service: PaymentService = Depends(get_payment_service),
 ):
@@ -22,7 +23,7 @@ def list_payments(
 
 @router.post("/invoices/{invoice_id}/payments", response_model=PaymentResponse, status_code=201)
 def create_payment(
-    invoice_id: int,
+    invoice_id: EntityId,
     dto: PaymentCreateRequest,
     invoice_service: InvoiceService = Depends(get_invoice_service),
     payment_service: PaymentService = Depends(get_payment_service),
@@ -32,7 +33,7 @@ def create_payment(
 
 
 @router.delete("/payments/{payment_id}", status_code=204)
-def delete_payment(payment_id: int, payment_service: PaymentService = Depends(get_payment_service)):
+def delete_payment(payment_id: EntityId, payment_service: PaymentService = Depends(get_payment_service)):
     payment = payment_service.payment_repository.find_by_id(payment_id)
     if payment is None:
         raise NotFoundError(f"payment {payment_id} not found")

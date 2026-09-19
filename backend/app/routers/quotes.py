@@ -18,6 +18,7 @@ from app.services.pdf_generation_service import PdfGenerationService
 from app.services.project_link_service import ProjectLinkService
 from app.services.quote_service import QuoteService
 from app.services.quote_to_invoice_conversion_service import QuoteToInvoiceConversionService
+from app.schemas.common import EntityId
 
 router = APIRouter(prefix="/api/quotes", tags=["quotes"])
 
@@ -61,7 +62,7 @@ def _to_list_item(quote) -> QuoteListItemResponse:
 
 @router.get("", response_model=list[QuoteListItemResponse])
 def list_quotes(
-    client_id: int | None = None,
+    client_id: EntityId | None = None,
     status: QuoteStatus | None = None,
     service: QuoteService = Depends(get_quote_service),
 ):
@@ -76,26 +77,26 @@ def create_quote(dto: QuoteCreateRequest, service: QuoteService = Depends(get_qu
 
 
 @router.get("/{quote_id}", response_model=QuoteResponse)
-def get_quote(quote_id: int, service: QuoteService = Depends(get_quote_service)):
+def get_quote(quote_id: EntityId, service: QuoteService = Depends(get_quote_service)):
     quote = service.get_quote(quote_id)
     return _to_response(quote)
 
 
 @router.put("/{quote_id}", response_model=QuoteResponse)
-def update_quote(quote_id: int, dto: QuoteUpdateRequest, service: QuoteService = Depends(get_quote_service)):
+def update_quote(quote_id: EntityId, dto: QuoteUpdateRequest, service: QuoteService = Depends(get_quote_service)):
     quote = service.update_quote(quote_id, dto)
     return _to_response(quote)
 
 
 @router.delete("/{quote_id}", status_code=204)
-def delete_quote(quote_id: int, service: QuoteService = Depends(get_quote_service)):
+def delete_quote(quote_id: EntityId, service: QuoteService = Depends(get_quote_service)):
     service.delete_quote(quote_id)
     return Response(status_code=204)
 
 
 @router.get("/{quote_id}/pdf")
 def get_quote_pdf(
-    quote_id: int,
+    quote_id: EntityId,
     service: QuoteService = Depends(get_quote_service),
     pdf_service: PdfGenerationService = Depends(get_pdf_generation_service),
 ):
@@ -110,7 +111,7 @@ def get_quote_pdf(
 
 @router.post("/{quote_id}/convert-to-invoice", response_model=InvoiceResponse, status_code=201)
 def convert_to_invoice(
-    quote_id: int,
+    quote_id: EntityId,
     conversion_service: QuoteToInvoiceConversionService = Depends(get_conversion_service),
     payment_service: PaymentService = Depends(get_payment_service),
 ):
@@ -120,7 +121,7 @@ def convert_to_invoice(
 
 @router.put("/{quote_id}/project", response_model=QuoteResponse)
 def link_quote_project(
-    quote_id: int,
+    quote_id: EntityId,
     dto: ProjectLinkRequest,
     link_service: ProjectLinkService = Depends(get_project_link_service),
 ):

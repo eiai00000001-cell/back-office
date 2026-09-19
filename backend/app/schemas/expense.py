@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 from pydantic import BaseModel, Field, field_validator
 
 from app.enums import ExpenseTaxCategory, PaymentMethod
+from app.schemas.common import EntityId
 
 
 class ExpenseCreateRequest(BaseModel):
@@ -13,7 +14,7 @@ class ExpenseCreateRequest(BaseModel):
     payee: str | None = Field(default=None, max_length=100)
     payment_method: PaymentMethod | None = None
     memo: str | None = Field(default=None, max_length=500)
-    project_id: int | None = None
+    project_id: EntityId | None = None
 
     # レビュー指摘1対応: Field(description=...)は実際のエラーメッセージにならないため、
     # mode="before"バリデータで詳細設計書3.6章の日本語メッセージを明示的に返す。

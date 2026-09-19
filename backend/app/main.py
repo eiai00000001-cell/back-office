@@ -7,6 +7,8 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import STATIC_DIR
 from app.database import Base, engine
+from app.schemas.common import ID_ERROR_MESSAGE
+from app.schemas.field_labels import resolve_label
 from app.exceptions import ConflictError, NotFoundError, UnprocessableError, ValidationFailedError
 from app.routers import clients, company_profile, dashboard, expenses, health, home, invoices, payments, projects, quotes
 
@@ -48,6 +50,32 @@ async def handle_conflict_error(request: Request, exc: ConflictError):
     return JSONResponse(status_code=409, content={"detail": str(exc)})
 
 
+# ID項目に数値以外が渡された場合にPydanticが返す型エラー(英語メッセージ)。日本語の統一文言へ置き換える。
+_ID_TYPE_ERRORS = {"int_parsing", "int_type", "int_from_float", "int_parsing_size"}
+
+
+def _is_id_type_error(error: dict) -> bool:
+    loc = [part for part in error.get("loc", ()) if isinstance(part, str)]
+    field = loc[-1] if loc else ""
+    return error.get("type") in _ID_TYPE_ERRORS and (field == "id" or field.endswith("_id"))
+
+
+def _localize_standard_error(error: dict, path: str) -> str | None:
+    """必須欠落(missing)・文字数超過(string_too_long)を日本語化する。対象外や項目名未定義はNone。"""
+    loc = [part for part in error.get("loc", ()) if isinstance(part, str)]
+    field = loc[-1] if loc else ""
+    label = resolve_label(path, field) if field != "body" else None
+    if label is None:
+        return None
+    if error.get("type") == "missing":
+        return f"{label}は必須です"
+    if error.get("type") == "string_too_long":
+        max_length = (error.get("ctx") or {}).get("max_length")
+        if max_length is not None:
+            return f"{label}は{max_length}文字以内で入力してください"
+    return None
+
+
 @app.exception_handler(RequestValidationError)
 async def handle_request_validation_error(request: Request, exc: RequestValidationError):
     # FastAPI/Pydantic v2は標準では{"detail": [{"type":..., "loc":..., "msg":...}, ...]}という
@@ -60,7 +88,12 @@ async def handle_request_validation_error(request: Request, exc: RequestValidati
         raw_message = str(errors[0].get("msg", ""))
         prefix = "Value error, "
         message = raw_message[len(prefix):] if raw_message.startswith(prefix) else raw_message
-        if not message:
+        if _is_id_type_error(errors[0]):
+            message = ID_ERROR_MESSAGE
+        localized = _localize_standard_error(errors[0], request.url.path)
+        if localized:
+            message = localized
+        if not message or message == "Field required":
             message = "入力内容を確認してください"
     return JSONResponse(status_code=422, content={"detail": message})
 

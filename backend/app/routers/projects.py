@@ -14,6 +14,7 @@ from app.schemas.project import (
     ProjectUpdateRequest,
 )
 from app.services.project_service import ProjectDetail, ProjectListItem, ProjectService
+from app.schemas.common import EntityId
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -73,7 +74,7 @@ def _to_detail(detail: ProjectDetail) -> ProjectDetailResponse:
 @router.get("", response_model=list[ProjectListItemResponse])
 def list_projects(
     status: ProjectStatus | None = None,
-    client_id: int | None = None,
+    client_id: EntityId | None = None,
     service: ProjectService = Depends(get_project_service),
 ):
     items = service.list_projects(status=status.value if status else None, client_id=client_id)
@@ -86,25 +87,25 @@ def create_project(dto: ProjectCreateRequest, service: ProjectService = Depends(
 
 
 @router.get("/{project_id}", response_model=ProjectDetailResponse)
-def get_project(project_id: int, service: ProjectService = Depends(get_project_service)):
+def get_project(project_id: EntityId, service: ProjectService = Depends(get_project_service)):
     return _to_detail(service.get_project_detail(project_id))
 
 
 @router.put("/{project_id}", response_model=ProjectResponse)
 def update_project(
-    project_id: int, dto: ProjectUpdateRequest, service: ProjectService = Depends(get_project_service)
+    project_id: EntityId, dto: ProjectUpdateRequest, service: ProjectService = Depends(get_project_service)
 ):
     return _to_response(service.update_project(project_id, dto))
 
 
 @router.patch("/{project_id}/status", response_model=ProjectResponse)
 def change_project_status(
-    project_id: int, dto: ProjectStatusChangeRequest, service: ProjectService = Depends(get_project_service)
+    project_id: EntityId, dto: ProjectStatusChangeRequest, service: ProjectService = Depends(get_project_service)
 ):
     return _to_response(service.change_status(project_id, dto.status))
 
 
 @router.delete("/{project_id}", status_code=204)
-def delete_project(project_id: int, service: ProjectService = Depends(get_project_service)):
+def delete_project(project_id: EntityId, service: ProjectService = Depends(get_project_service)):
     service.delete_project(project_id)
     return Response(status_code=204)

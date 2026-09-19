@@ -65,7 +65,7 @@ const buildQuote = (overrides: Partial<Quote> = {}): Quote => ({
   expiry_date: '2026-08-25',
   status: 'DRAFT',
   items: [
-    { id: 10, item_name: 'Webサイト制作作業', quantity: 1, unit_price: 300000, tax_category: 'STANDARD_10', amount: 300000, sort_order: 0 },
+    { id: 10, item_name: 'Webサイト制作作業', quantity: '1.00', unit_price: 300000, tax_category: 'STANDARD_10', amount: 300000, sort_order: 0 },
   ],
   subtotal_amount: 300000,
   tax_amount: 30000,
@@ -136,5 +136,32 @@ describe('QuoteDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存' }))
 
     await waitFor(() => expect(mockedQuotesApi.update).toHaveBeenCalledWith(1, expect.objectContaining({ project_id: 7 })))
+  })
+
+  // 不具合#1回帰: 実APIはDecimalのquantityを文字列("1.00")で返す。既存書類を開いても保存でき、値が壊れないこと。
+  it('APIが数量を文字列で返しても保存ボタンが有効で、小数の数量を数値のまま保存できる', async () => {
+    const doc = buildQuote({
+      items: [
+        { id: 10, item_name: 'Webサイト制作作業', quantity: '2.50', unit_price: 300000, tax_category: 'STANDARD_10', amount: 750000, sort_order: 0 },
+      ],
+    })
+    mockedQuotesApi.get.mockResolvedValue(doc)
+    mockedQuotesApi.update.mockResolvedValue(doc)
+
+    renderQuoteDetailPage()
+
+    await screen.findByDisplayValue('Webサイト制作作業')
+    const saveButton = screen.getByRole('button', { name: '保存' })
+    expect(saveButton).toBeEnabled()
+    fireEvent.click(saveButton)
+
+    await waitFor(() =>
+      expect(mockedQuotesApi.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          items: [expect.objectContaining({ quantity: 2.5, unit_price: 300000 })],
+        })
+      )
+    )
   })
 })

@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.enums import PaymentStatus, TaxCategory
 from app.schemas.payment import PaymentResponse
+from app.schemas.common import EntityId
 
 
 class InvoiceItemInput(BaseModel):
@@ -68,12 +69,12 @@ class InvoiceItemResponse(BaseModel):
 
 
 class InvoiceCreateRequest(BaseModel):
-    client_id: int
+    client_id: EntityId
     issue_date: str | None = None
     due_date: str | None = None
     items: list[InvoiceItemInput]
     remarks: str | None = Field(default=None, max_length=1000)
-    project_id: int | None = None
+    project_id: EntityId | None = None
 
 
 class InvoiceUpdateRequest(InvoiceCreateRequest):

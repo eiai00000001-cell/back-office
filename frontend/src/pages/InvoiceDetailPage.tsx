@@ -15,6 +15,7 @@ import { useLocation, useNavigate, useParams, useSearchParams, Link as RouterLin
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
 import ProjectSelect from '../components/ProjectSelect'
+import { toItemInputs } from '../utils/items'
 import ItemsEditor, { createEmptyItem, validateItems } from '../components/ItemsEditor'
 import { clientsApi } from '../api/clients'
 import { invoicesApi, type InvoicePayload } from '../api/invoices'
@@ -55,7 +56,7 @@ export default function InvoiceDetailPage() {
       setClientId(invoice.client_id)
       setIssueDate(invoice.issue_date ?? '')
       setDueDate(invoice.due_date ?? '')
-      setItems(invoice.items.map((i) => ({ ...i, clientKey: String(i.id) })))
+      setItems(toItemInputs(invoice.items))
       setRemarks(invoice.remarks ?? '')
       setProjectId(invoice.project_id)
     }

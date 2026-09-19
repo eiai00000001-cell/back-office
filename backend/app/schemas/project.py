@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from app.enums import PaymentStatus, ProjectStatus, QuoteStatus
+from app.schemas.common import EntityId
 
 _ISO_DATE_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}")
 _DUE_DATE_MESSAGE = "納期は日付(YYYY-MM-DD)で入力してください"
@@ -12,7 +13,7 @@ _DUE_DATE_MESSAGE = "納期は日付(YYYY-MM-DD)で入力してください"
 
 class ProjectCreateRequest(BaseModel):
     name: str = Field(max_length=100)
-    client_id: int | None = None
+    client_id: EntityId | None = None
     status: ProjectStatus = ProjectStatus.NOT_STARTED
     due_date: str | None = None
     description: str | None = Field(default=None, max_length=1000)
@@ -51,7 +52,7 @@ class ProjectStatusChangeRequest(BaseModel):
 
 
 class ProjectLinkRequest(BaseModel):
-    project_id: int | None = None
+    project_id: EntityId | None = None
 
 
 class ProjectResponse(BaseModel):

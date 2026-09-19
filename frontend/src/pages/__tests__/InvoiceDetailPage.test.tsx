@@ -69,7 +69,7 @@ const buildInvoice = (overrides: Partial<Invoice> = {}): Invoice => ({
   project_id: null,
   project_name: null,
   items: [
-    { id: 10, item_name: 'Webサイト制作作業', quantity: 1, unit_price: 300000, tax_category: 'STANDARD_10', amount: 300000, sort_order: 0 },
+    { id: 10, item_name: 'Webサイト制作作業', quantity: '1.00', unit_price: 300000, tax_category: 'STANDARD_10', amount: 300000, sort_order: 0 },
   ],
   subtotal_amount: 300000,
   tax_amount: 30000,
@@ -236,5 +236,32 @@ describe('InvoiceDetailPage', () => {
     fireEvent.click(await screen.findByRole('option', { name: 'ロゴデザイン制作(完了)' }))
 
     expect(mockedInvoicesApi.linkProject).not.toHaveBeenCalled()
+  })
+
+  // 不具合#1回帰: 実APIはDecimalのquantityを文字列("1.00")で返す。既存書類を開いても保存でき、値が壊れないこと。
+  it('APIが数量を文字列で返しても保存ボタンが有効で、小数の数量を数値のまま保存できる', async () => {
+    const doc = buildInvoice({
+      items: [
+        { id: 10, item_name: 'Webサイト制作作業', quantity: '2.50', unit_price: 300000, tax_category: 'STANDARD_10', amount: 750000, sort_order: 0 },
+      ],
+    })
+    mockedInvoicesApi.get.mockResolvedValue(doc)
+    mockedInvoicesApi.update.mockResolvedValue(doc)
+
+    renderInvoiceDetailPage()
+
+    await screen.findByDisplayValue('Webサイト制作作業')
+    const saveButton = screen.getByRole('button', { name: '保存' })
+    expect(saveButton).toBeEnabled()
+    fireEvent.click(saveButton)
+
+    await waitFor(() =>
+      expect(mockedInvoicesApi.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          items: [expect.objectContaining({ quantity: 2.5, unit_price: 300000 })],
+        })
+      )
+    )
   })
 })
