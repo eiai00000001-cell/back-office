@@ -43,3 +43,10 @@ export const QUOTE_STATUS_COLORS: Record<string, string> = {
 }
 
 export const OVERDUE_BACKGROUND = '#fdecea'
+
+export const PROJECT_STATUS_COLORS: Record<string, string> = {
+  NOT_STARTED: '#6b7280',
+  IN_PROGRESS: '#1d4ed8',
+  WAITING_REVIEW: '#b45309',
+  DONE: '#15803d',
+}

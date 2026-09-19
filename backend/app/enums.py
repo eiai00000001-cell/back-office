@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 class TaxCategory(str, Enum):
@@ -51,3 +51,12 @@ ACCOUNT_CATEGORIES = [
     "雑費",
     "その他",
 ]
+
+
+class ProjectStatus(StrEnum):
+    """案件の進捗ステータス。カンバンの列順は宣言順(詳細設計書4.9.1章)。"""
+
+    NOT_STARTED = "NOT_STARTED"
+    IN_PROGRESS = "IN_PROGRESS"
+    WAITING_REVIEW = "WAITING_REVIEW"
+    DONE = "DONE"

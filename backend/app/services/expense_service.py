@@ -4,7 +4,9 @@ from datetime import datetime
 from app.exceptions import NotFoundError, ValidationFailedError
 from app.models.expense import Expense
 from app.repositories.expense_repository import ExpenseRepository
+from app.repositories.project_repository import ProjectRepository
 from app.schemas.expense import CategorySummaryItem, ExpenseCreateRequest, ExpenseUpdateRequest, MonthSummaryItem
+from app.services.project_link_service import ensure_project_exists
 
 
 def _now_iso() -> str:
@@ -18,10 +20,15 @@ def _period_bounds(period_from: str | None, period_to: str | None) -> tuple[str 
 
 
 class ExpenseService:
-    def __init__(self, expense_repository: ExpenseRepository):
+    def __init__(self, expense_repository: ExpenseRepository, project_repository: ProjectRepository):
         self.expense_repository = expense_repository
+        self.project_repository = project_repository
+
+    def _validate_project(self, dto) -> None:
+        ensure_project_exists(self.project_repository, dto.project_id)
 
     def create_expense(self, dto: ExpenseCreateRequest) -> Expense:
+        self._validate_project(dto)
         now = _now_iso()
         expense = Expense(
             expense_date=dto.expense_date,
@@ -31,6 +38,7 @@ class ExpenseService:
             payee=dto.payee,
             payment_method=dto.payment_method.value if dto.payment_method else None,
             memo=dto.memo,
+            project_id=dto.project_id,
             created_at=now,
             updated_at=now,
         )
@@ -40,6 +48,7 @@ class ExpenseService:
         expense = self.expense_repository.find_by_id(expense_id)
         if expense is None:
             raise NotFoundError(f"expense {expense_id} not found")
+        self._validate_project(dto)
         expense.expense_date = dto.expense_date
         expense.account_category = dto.account_category
         expense.amount = dto.amount
@@ -47,6 +56,7 @@ class ExpenseService:
         expense.payee = dto.payee
         expense.payment_method = dto.payment_method.value if dto.payment_method else None
         expense.memo = dto.memo
+        expense.project_id = dto.project_id
         expense.updated_at = _now_iso()
         return self.expense_repository.update(expense)
 

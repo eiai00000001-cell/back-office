@@ -4,6 +4,7 @@ from app.models.expense import Expense
 from app.models.invoice import Invoice
 from app.models.invoice_item import InvoiceItem
 from app.models.payment import Payment
+from app.models.project import Project
 from app.models.quote import Quote
 from app.models.quote_item import QuoteItem
 
@@ -14,6 +15,7 @@ __all__ = [
     "Invoice",
     "InvoiceItem",
     "Payment",
+    "Project",
     "Quote",
     "QuoteItem",
 ]

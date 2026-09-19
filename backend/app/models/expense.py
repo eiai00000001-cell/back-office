@@ -1,5 +1,5 @@
-from sqlalchemy import CheckConstraint, Index, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -18,6 +18,7 @@ class Expense(Base):
         ),
         Index("idx_expenses_expense_date", "expense_date"),
         Index("idx_expenses_account_category", "account_category"),
+        Index("idx_expenses_project_id", "project_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -30,5 +31,13 @@ class Expense(Base):
     memo: Mapped[str | None] = mapped_column(String, nullable=True)
     attachment_path: Mapped[str | None] = mapped_column(String, nullable=True)
     attachment_original_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    project_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[str] = mapped_column(String, nullable=False)
     updated_at: Mapped[str] = mapped_column(String, nullable=False)
+    project = relationship("Project")
+
+    @property
+    def project_name(self) -> str | None:
+        return self.project.name if self.project else None

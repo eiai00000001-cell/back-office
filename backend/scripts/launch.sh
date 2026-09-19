@@ -12,8 +12,17 @@ LOG_FILE="${BACKEND_DIR}/logs/uvicorn.log"
 
 mkdir -p "${BACKEND_DIR}/run" "${BACKEND_DIR}/logs"
 
+log() {
+  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"${LOG_FILE}"
+}
+
+# ダイアログ表示。表示に失敗した場合(osascript異常終了等)もログへ記録して気付けるようにする。
 notify() {
-  osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with icon caution" >/dev/null 2>&1
+  local msg
+  msg="$(printf %s "$1" | tr -d '"\\' | tr '\n' ' ')"
+  if ! osascript -e "display dialog \"${msg}\" buttons {\"OK\"} default button \"OK\" with icon caution" >/dev/null 2>&1; then
+    log "ダイアログの表示に失敗しました。内容: ${msg}"
+  fi
 }
 
 is_healthy() {
@@ -26,17 +35,83 @@ if is_healthy; then
 fi
 
 cd "${BACKEND_DIR}" || exit 1
+
+# 二重起動の排他(mkdirによる簡易ロック)。ロックにはPIDを記録し、異常終了で残った古いロックは検知して回復する。
+LOCK_DIR="${BACKEND_DIR}/run/launch.lock"
+HEALTH_MAX_ATTEMPTS="${LAUNCH_HEALTH_MAX_ATTEMPTS:-30}"  # 30 * 0.5秒 = 最大15秒
+HEALTH_INTERVAL="${LAUNCH_HEALTH_INTERVAL:-0.5}"
+HOLD_LOCK=0
+
+release_lock() {
+  if [ "${HOLD_LOCK}" -eq 1 ]; then
+    rm -f "${LOCK_DIR}/pid"
+    rmdir "${LOCK_DIR}" 2>/dev/null
+    HOLD_LOCK=0
+  fi
+}
+
+acquire_lock() {
+  if mkdir "${LOCK_DIR}" 2>/dev/null; then
+    echo $$ >"${LOCK_DIR}/pid"
+    HOLD_LOCK=1
+    return 0
+  fi
+  local holder
+  holder="$(cat "${LOCK_DIR}/pid" 2>/dev/null)"
+  if [ -n "${holder}" ] && kill -0 "${holder}" 2>/dev/null; then
+    return 1  # 別の起動処理が実行中
+  fi
+  log "古い起動ロック(PID: ${holder:-不明})を検知したため解除します"
+  rm -f "${LOCK_DIR}/pid"
+  rmdir "${LOCK_DIR}" 2>/dev/null
+  if mkdir "${LOCK_DIR}" 2>/dev/null; then
+    echo $$ >"${LOCK_DIR}/pid"
+    HOLD_LOCK=1
+    return 0
+  fi
+  return 1
+}
+
+trap release_lock EXIT
+trap 'exit 130' INT TERM HUP
+
+if ! acquire_lock; then
+  # 別の起動処理が進行中。完了(ヘルスチェック成功)を待ってブラウザだけ開く。
+  log "別の起動処理が実行中のため、この起動は待機のみ行います"
+  waited=0
+  while [ "${waited}" -lt "${HEALTH_MAX_ATTEMPTS}" ]; do
+    if is_healthy; then
+      open "http://127.0.0.1:8000"
+      exit 0
+    fi
+    sleep "${HEALTH_INTERVAL}"
+    waited=$((waited + 1))
+  done
+  notify "別の起動処理が完了しませんでした。logs/uvicorn.logを確認してください"
+  exit 1
+fi
+
+# 起動前にDBマイグレーションを自動適用する(適用前に db/ へ退避コピーを作成。適用済みなら何もしない)。
+# 標準出力(技術的詳細)はログへ、標準エラー(1行の日本語要約)のみをダイアログ用に取得する。
+# 失敗した場合はアプリ本体を起動しない。
+MIGRATE_ERR="$("${BACKEND_DIR}/.venv/bin/python" -m app.migrate 2>&1 >>"${LOG_FILE}")"
+if [ $? -ne 0 ]; then
+  log "マイグレーション失敗: ${MIGRATE_ERR}"
+  REASON="$(printf %s "${MIGRATE_ERR}" | grep -v '^[[:space:]]*$' | tail -n 1 | cut -c1-200)"
+  notify "データベースの更新に失敗したため起動を中止しました。${REASON} 詳細はlogs/uvicorn.logを確認してください。"
+  exit 1
+fi
+
 nohup "${BACKEND_DIR}/.venv/bin/uvicorn" app.main:app --host 127.0.0.1 --port 8000 >>"${LOG_FILE}" 2>&1 &
 echo $! > "${PID_FILE}"
 
 attempt=0
-max_attempts=30  # 30 * 0.5秒 = 最大15秒
-while [ "${attempt}" -lt "${max_attempts}" ]; do
+while [ "${attempt}" -lt "${HEALTH_MAX_ATTEMPTS}" ]; do
   if is_healthy; then
     open "http://127.0.0.1:8000"
     exit 0
   fi
-  sleep 0.5
+  sleep "${HEALTH_INTERVAL}"
   attempt=$((attempt + 1))
 done
 

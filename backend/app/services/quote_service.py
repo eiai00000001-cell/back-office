@@ -5,9 +5,11 @@ from app.exceptions import NotFoundError, ValidationFailedError
 from app.models.quote import Quote
 from app.models.quote_item import QuoteItem
 from app.repositories.client_repository import ClientRepository
+from app.repositories.project_repository import ProjectRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.schemas.quote import QuoteCreateRequest, QuoteUpdateRequest
 from app.services.numbering_service import NumberingService
+from app.services.project_link_service import ensure_project_exists
 from app.services.tax_calculation_service import TaxCalculationService
 
 
@@ -22,11 +24,16 @@ class QuoteService:
         client_repository: ClientRepository,
         numbering_service: NumberingService,
         tax_calculation_service: TaxCalculationService,
+        project_repository: ProjectRepository,
     ):
         self.quote_repository = quote_repository
         self.client_repository = client_repository
         self.numbering_service = numbering_service
         self.tax_calculation_service = tax_calculation_service
+        self.project_repository = project_repository
+
+    def _validate_project(self, dto) -> None:
+        ensure_project_exists(self.project_repository, dto.project_id)
 
     def _validate(self, dto: QuoteCreateRequest) -> None:
         if not dto.items:
@@ -59,11 +66,13 @@ class QuoteService:
 
     def create_quote(self, dto: QuoteCreateRequest) -> Quote:
         self._validate(dto)
+        self._validate_project(dto)
         totals, items = self._calculate_and_build_items(dto)
         now = _now_iso()
         quote = Quote(
             quote_number=self.numbering_service.generate_number("quote"),
             client_id=dto.client_id,
+            project_id=dto.project_id,
             issue_date=dto.issue_date,
             expiry_date=dto.expiry_date,
             status=dto.status.value,
@@ -82,8 +91,10 @@ class QuoteService:
         if quote is None:
             raise NotFoundError(f"quote {quote_id} not found")
         self._validate(dto)
+        self._validate_project(dto)
         totals, items = self._calculate_and_build_items(dto)
         quote.client_id = dto.client_id
+        quote.project_id = dto.project_id
         quote.issue_date = dto.issue_date
         quote.expiry_date = dto.expiry_date
         quote.status = dto.status.value

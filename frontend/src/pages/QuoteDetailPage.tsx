@@ -15,6 +15,7 @@ import {
 import { useLocation, useNavigate, useParams, useSearchParams, Link as RouterLink } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
+import ProjectSelect from '../components/ProjectSelect'
 import ItemsEditor, { createEmptyItem, validateItems } from '../components/ItemsEditor'
 import { clientsApi } from '../api/clients'
 import { quotesApi, type QuotePayload } from '../api/quotes'
@@ -44,6 +45,7 @@ export default function QuoteDetailPage() {
   const [status, setStatus] = useState<QuoteStatus>('DRAFT')
   const [items, setItems] = useState<ItemInput[]>([createEmptyItem()])
   const [remarks, setRemarks] = useState('')
+  const [projectId, setProjectId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function QuoteDetailPage() {
       setStatus(quote.status)
       setItems(quote.items.map((i) => ({ ...i, clientKey: String(i.id) })))
       setRemarks(quote.remarks ?? '')
+      setProjectId(quote.project_id)
     }
   }, [quote])
 
@@ -113,6 +116,7 @@ export default function QuoteDetailPage() {
       status,
       items,
       remarks: remarks || null,
+      project_id: projectId,
     })
   }
 
@@ -167,6 +171,9 @@ export default function QuoteDetailPage() {
             <TextField label="発行日" type="date" InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
             <TextField label="有効期限" type="date" InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
           </Stack>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, maxWidth: 480 }}>
+            <ProjectSelect value={projectId} onChange={setProjectId} showDetailLink />
+          </Box>
           <Stack direction="row" spacing={1}>
             <Button variant={status === 'DRAFT' ? 'contained' : 'outlined'} size="small" onClick={() => setStatus('DRAFT')}>
               作成中

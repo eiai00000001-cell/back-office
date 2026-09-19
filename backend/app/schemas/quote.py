@@ -11,6 +11,7 @@ class QuoteCreateRequest(BaseModel):
     status: QuoteStatus = QuoteStatus.DRAFT
     items: list[InvoiceItemInput]
     remarks: str | None = Field(default=None, max_length=1000)
+    project_id: int | None = None
 
 
 class QuoteUpdateRequest(QuoteCreateRequest):
@@ -30,6 +31,8 @@ class QuoteResponse(BaseModel):
     tax_amount: int
     total_amount: int
     remarks: str | None
+    project_id: int | None = None
+    project_name: str | None = None
     converted_invoice_id: int | None
     converted_invoice_number: str | None
 
@@ -45,5 +48,7 @@ class QuoteListItemResponse(BaseModel):
     expiry_date: str | None
     total_amount: int
     status: QuoteStatus
+    project_id: int | None = None
+    project_name: str | None = None
 
     model_config = {"from_attributes": True}

@@ -12,7 +12,7 @@ class InvoiceRepository:
     def find_by_id(self, invoice_id: int) -> Invoice | None:
         stmt = (
             select(Invoice)
-            .options(selectinload(Invoice.items), selectinload(Invoice.payments), selectinload(Invoice.client))
+            .options(selectinload(Invoice.items), selectinload(Invoice.payments), selectinload(Invoice.client), selectinload(Invoice.project))
             .where(Invoice.id == invoice_id)
         )
         return self.session.execute(stmt).scalar_one_or_none()
@@ -20,7 +20,7 @@ class InvoiceRepository:
     def list_all(self, client_id: int | None = None) -> list[Invoice]:
         stmt = (
             select(Invoice)
-            .options(selectinload(Invoice.items), selectinload(Invoice.payments), selectinload(Invoice.client))
+            .options(selectinload(Invoice.items), selectinload(Invoice.payments), selectinload(Invoice.client), selectinload(Invoice.project))
             .order_by(Invoice.id.desc())
         )
         if client_id is not None:

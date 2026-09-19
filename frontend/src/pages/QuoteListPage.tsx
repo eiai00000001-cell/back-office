@@ -90,6 +90,7 @@ export default function QuoteListPage() {
               <TableRow>
                 <TableCell>見積書番号</TableCell>
                 <TableCell>取引先名</TableCell>
+                <TableCell>案件</TableCell>
                 <TableCell>発行日</TableCell>
                 <TableCell>有効期限</TableCell>
                 <TableCell align="right">合計金額</TableCell>
@@ -101,6 +102,7 @@ export default function QuoteListPage() {
                 <TableRow key={quote.id} hover onClick={() => navigate(`/quotes/${quote.id}`)} sx={{ cursor: 'pointer' }}>
                   <TableCell>{quote.quote_number}</TableCell>
                   <TableCell>{quote.client_name}</TableCell>
+                  <TableCell>{quote.project_name ?? ''}</TableCell>
                   <TableCell>{quote.issue_date ?? '-'}</TableCell>
                   <TableCell>{quote.expiry_date ?? '-'}</TableCell>
                   <TableCell align="right">{formatCurrency(quote.total_amount)}</TableCell>

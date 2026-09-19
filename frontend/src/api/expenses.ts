@@ -9,6 +9,8 @@ export interface ExpensePayload {
   payee: string | null
   payment_method: PaymentMethod | null
   memo: string | null
+  // 通常のPUTはproject_id省略で案件なしに更新されるため、編集時は現在値を必ず送る(詳細設計書4.9.5・4.13.2)
+  project_id: number | null
 }
 
 export interface ExpenseListFilters {
@@ -28,6 +30,8 @@ export const expensesApi = {
   remove: async (id: number): Promise<void> => {
     await apiClient.delete(`/expenses/${id}`)
   },
+  linkProject: async (id: number, projectId: number | null): Promise<Expense> =>
+    (await apiClient.put(`/expenses/${id}/project`, { project_id: projectId })).data,
   uploadAttachment: async (id: number, file: File): Promise<Expense> => {
     const formData = new FormData()
     formData.append('file', file)

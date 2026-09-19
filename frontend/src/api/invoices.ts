@@ -7,6 +7,8 @@ export interface InvoicePayload {
   due_date: string | null
   items: ItemInput[]
   remarks: string | null
+  // 通常のPUTはproject_id省略で案件なしに更新されるため、編集時は現在値を必ず送る(詳細設計書4.9.5・4.13.2)
+  project_id: number | null
 }
 
 export interface InvoiceListFilters {
@@ -24,6 +26,8 @@ export const invoicesApi = {
   remove: async (id: number): Promise<void> => {
     await apiClient.delete(`/invoices/${id}`)
   },
+  linkProject: async (id: number, projectId: number | null): Promise<Invoice> =>
+    (await apiClient.put(`/invoices/${id}/project`, { project_id: projectId })).data,
   pdfUrl: (id: number): string => `/api/invoices/${id}/pdf`,
   listPayments: async (invoiceId: number): Promise<Payment[]> =>
     (await apiClient.get(`/invoices/${invoiceId}/payments`)).data,

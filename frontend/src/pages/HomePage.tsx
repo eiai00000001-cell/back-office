@@ -10,6 +10,7 @@ const NAV_CARDS = [
   { to: '/quotes', name: '見積書', desc: '見積書の作成・請求書への変換' },
   { to: '/receivables', name: '売掛金', desc: '入金状況・未入金の確認' },
   { to: '/dashboard', name: '財務ダッシュボード', desc: '売上・経費・損益・見積状況の可視化' },
+  { to: '/projects/kanban', name: '案件管理', desc: '案件の進捗・納期の管理' },
 ]
 
 export default function HomePage() {

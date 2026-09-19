@@ -3,6 +3,7 @@ import { Alert, Box, Button, Card, Container, MenuItem, Stack, TextField, Typogr
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
+import ProjectSelect from '../components/ProjectSelect'
 import { expensesApi, type ExpensePayload } from '../api/expenses'
 import { extractErrorMessage } from '../api/client'
 import { ACCOUNT_CATEGORIES, EXPENSE_TAX_CATEGORY_LABELS, PAYMENT_METHOD_LABELS, type ExpenseTaxCategory, type PaymentMethod } from '../types'
@@ -32,6 +33,7 @@ export default function ExpenseFormPage() {
   const [payee, setPayee] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('')
   const [memo, setMemo] = useState('')
+  const [projectId, setProjectId] = useState<number | null>(null)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
@@ -47,6 +49,7 @@ export default function ExpenseFormPage() {
       setPayee(expense.payee ?? '')
       setPaymentMethod(expense.payment_method ?? '')
       setMemo(expense.memo ?? '')
+      setProjectId(expense.project_id)
     }
   }, [expense])
 
@@ -104,6 +107,7 @@ export default function ExpenseFormPage() {
       payee: payee || null,
       payment_method: paymentMethod || null,
       memo: memo || null,
+      project_id: projectId,
     })
   }
 
@@ -175,6 +179,13 @@ export default function ExpenseFormPage() {
                 </MenuItem>
               ))}
             </TextField>
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <ProjectSelect
+                value={projectId}
+                onChange={setProjectId}
+                helperText="任意。案件に紐付けない経費は「案件なし」のままにできます"
+              />
+            </Box>
             <TextField label="メモ" multiline minRows={3} value={memo} onChange={(e) => setMemo(e.target.value)} inputProps={{ maxLength: 500 }} />
 
             <Box>

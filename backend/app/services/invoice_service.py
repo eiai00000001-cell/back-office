@@ -6,8 +6,10 @@ from app.models.invoice import Invoice
 from app.models.invoice_item import InvoiceItem
 from app.repositories.client_repository import ClientRepository
 from app.repositories.invoice_repository import InvoiceRepository
+from app.repositories.project_repository import ProjectRepository
 from app.schemas.invoice import InvoiceCreateRequest, InvoiceUpdateRequest
 from app.services.numbering_service import NumberingService
+from app.services.project_link_service import ensure_project_exists
 from app.services.tax_calculation_service import TaxCalculationService
 
 
@@ -22,11 +24,16 @@ class InvoiceService:
         client_repository: ClientRepository,
         numbering_service: NumberingService,
         tax_calculation_service: TaxCalculationService,
+        project_repository: ProjectRepository,
     ):
         self.invoice_repository = invoice_repository
         self.client_repository = client_repository
         self.numbering_service = numbering_service
         self.tax_calculation_service = tax_calculation_service
+        self.project_repository = project_repository
+
+    def _validate_project(self, dto) -> None:
+        ensure_project_exists(self.project_repository, dto.project_id)
 
     def _validate(self, dto: InvoiceCreateRequest) -> None:
         if not dto.items:
@@ -59,11 +66,13 @@ class InvoiceService:
 
     def create_invoice(self, dto: InvoiceCreateRequest) -> Invoice:
         self._validate(dto)
+        self._validate_project(dto)
         totals, items = self._calculate_and_build_items(dto)
         now = _now_iso()
         invoice = Invoice(
             invoice_number=self.numbering_service.generate_number("invoice"),
             client_id=dto.client_id,
+            project_id=dto.project_id,
             issue_date=dto.issue_date,
             due_date=dto.due_date,
             subtotal_amount=totals["subtotal_amount"],
@@ -81,8 +90,10 @@ class InvoiceService:
         if invoice is None:
             raise NotFoundError(f"invoice {invoice_id} not found")
         self._validate(dto)
+        self._validate_project(dto)
         totals, items = self._calculate_and_build_items(dto)
         invoice.client_id = dto.client_id
+        invoice.project_id = dto.project_id
         invoice.issue_date = dto.issue_date
         invoice.due_date = dto.due_date
         invoice.subtotal_amount = totals["subtotal_amount"]

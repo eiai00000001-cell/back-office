@@ -9,6 +9,7 @@ class Invoice(Base):
     __table_args__ = (
         Index("idx_invoices_client_id", "client_id"),
         Index("idx_invoices_issue_date", "issue_date"),
+        Index("idx_invoices_project_id", "project_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -23,6 +24,9 @@ class Invoice(Base):
     tax_amount: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_amount: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     remarks: Mapped[str | None] = mapped_column(String, nullable=True)
+    project_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[str] = mapped_column(String, nullable=False)
     updated_at: Mapped[str] = mapped_column(String, nullable=False)
 
@@ -32,3 +36,8 @@ class Invoice(Base):
     )
     payments = relationship("Payment", back_populates="invoice", cascade="all, delete-orphan")
     source_quote = relationship("Quote", back_populates="invoice")
+    project = relationship("Project")
+
+    @property
+    def project_name(self) -> str | None:
+        return self.project.name if self.project else None

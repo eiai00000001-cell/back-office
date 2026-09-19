@@ -7,8 +7,8 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import STATIC_DIR
 from app.database import Base, engine
-from app.exceptions import ConflictError, NotFoundError, ValidationFailedError
-from app.routers import clients, company_profile, dashboard, expenses, health, home, invoices, payments, quotes
+from app.exceptions import ConflictError, NotFoundError, UnprocessableError, ValidationFailedError
+from app.routers import clients, company_profile, dashboard, expenses, health, home, invoices, payments, projects, quotes
 
 logger = logging.getLogger("app")
 
@@ -25,11 +25,17 @@ app.include_router(expenses.router)
 app.include_router(payments.router)
 app.include_router(home.router)
 app.include_router(dashboard.router)
+app.include_router(projects.router)
 
 
 @app.exception_handler(ValidationFailedError)
 async def handle_validation_error(request: Request, exc: ValidationFailedError):
     return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+
+@app.exception_handler(UnprocessableError)
+async def handle_unprocessable_error(request: Request, exc: UnprocessableError):
+    return JSONResponse(status_code=422, content={"detail": str(exc)})
 
 
 @app.exception_handler(NotFoundError)

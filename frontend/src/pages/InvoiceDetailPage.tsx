@@ -14,6 +14,7 @@ import {
 import { useLocation, useNavigate, useParams, useSearchParams, Link as RouterLink } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AppHeader from '../components/AppHeader'
+import ProjectSelect from '../components/ProjectSelect'
 import ItemsEditor, { createEmptyItem, validateItems } from '../components/ItemsEditor'
 import { clientsApi } from '../api/clients'
 import { invoicesApi, type InvoicePayload } from '../api/invoices'
@@ -42,6 +43,7 @@ export default function InvoiceDetailPage() {
   const [dueDate, setDueDate] = useState('')
   const [items, setItems] = useState<ItemInput[]>([createEmptyItem()])
   const [remarks, setRemarks] = useState('')
+  const [projectId, setProjectId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10))
@@ -55,6 +57,7 @@ export default function InvoiceDetailPage() {
       setDueDate(invoice.due_date ?? '')
       setItems(invoice.items.map((i) => ({ ...i, clientKey: String(i.id) })))
       setRemarks(invoice.remarks ?? '')
+      setProjectId(invoice.project_id)
     }
   }, [invoice])
 
@@ -81,6 +84,17 @@ export default function InvoiceDetailPage() {
       } else {
         queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
       }
+    },
+    onError: (error) => setErrorMessage(extractErrorMessage(error)),
+  })
+
+  // F-04変換直後(発行日・支払期限が未設定)は通常保存できないため、案件の変更だけを専用APIで即時保存する(詳細設計書3.21・4.9.5)
+  const linkMutation = useMutation({
+    mutationFn: (nextProjectId: number | null) => invoicesApi.linkProject(invoiceId as number, nextProjectId),
+    onSuccess: () => {
+      setErrorMessage(null)
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (error) => setErrorMessage(extractErrorMessage(error)),
   })
@@ -130,10 +144,18 @@ export default function InvoiceDetailPage() {
       due_date: dueDate || null,
       items,
       remarks: remarks || null,
+      project_id: projectId,
     })
   }
 
   const showDatesMissingNotice = !isNew && invoice && !invoice.issue_date && !invoice.due_date
+
+  const handleProjectChange = (nextProjectId: number | null) => {
+    setProjectId(nextProjectId)
+    if (showDatesMissingNotice) {
+      linkMutation.mutate(nextProjectId)
+    }
+  }
 
   return (
     <Box>
@@ -188,6 +210,14 @@ export default function InvoiceDetailPage() {
             <TextField label="発行日" type="date" InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
             <TextField label="支払期限" type="date" InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </Stack>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, maxWidth: 480 }}>
+            <ProjectSelect
+              value={projectId}
+              onChange={handleProjectChange}
+              showDetailLink
+              helperText={showDatesMissingNotice ? '案件の変更はこの場で保存されます' : undefined}
+            />
+          </Box>
         </Card>
 
         <Card variant="outlined" sx={{ p: 2.5, mb: 2.5 }}>

@@ -4,15 +4,18 @@ from app.dependencies import (
     get_conversion_service,
     get_pdf_generation_service,
     get_payment_service,
+    get_project_link_service,
     get_quote_service,
 )
 from app.enums import QuoteStatus
 from app.exceptions import ConflictError
 from app.routers.invoices import _to_response as invoice_to_response
 from app.schemas.invoice import InvoiceResponse
+from app.schemas.project import ProjectLinkRequest
 from app.schemas.quote import QuoteCreateRequest, QuoteListItemResponse, QuoteResponse, QuoteUpdateRequest
 from app.services.payment_service import PaymentService
 from app.services.pdf_generation_service import PdfGenerationService
+from app.services.project_link_service import ProjectLinkService
 from app.services.quote_service import QuoteService
 from app.services.quote_to_invoice_conversion_service import QuoteToInvoiceConversionService
 
@@ -34,6 +37,8 @@ def _to_response(quote) -> QuoteResponse:
         tax_amount=quote.tax_amount,
         total_amount=quote.total_amount,
         remarks=quote.remarks,
+        project_id=quote.project_id,
+        project_name=quote.project_name,
         converted_invoice_id=invoice.id if invoice else None,
         converted_invoice_number=invoice.invoice_number if invoice else None,
     )
@@ -49,6 +54,8 @@ def _to_list_item(quote) -> QuoteListItemResponse:
         expiry_date=quote.expiry_date,
         total_amount=quote.total_amount,
         status=quote.status,
+        project_id=quote.project_id,
+        project_name=quote.project_name,
     )
 
 
@@ -109,3 +116,12 @@ def convert_to_invoice(
 ):
     invoice = conversion_service.convert(quote_id)
     return invoice_to_response(invoice, payment_service)
+
+
+@router.put("/{quote_id}/project", response_model=QuoteResponse)
+def link_quote_project(
+    quote_id: int,
+    dto: ProjectLinkRequest,
+    link_service: ProjectLinkService = Depends(get_project_link_service),
+):
+    return _to_response(link_service.link_quote(quote_id, dto.project_id))

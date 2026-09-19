@@ -13,7 +13,7 @@ class QuoteRepository:
     def find_by_id(self, quote_id: int) -> Quote | None:
         stmt = (
             select(Quote)
-            .options(selectinload(Quote.items), selectinload(Quote.client), selectinload(Quote.invoice))
+            .options(selectinload(Quote.items), selectinload(Quote.client), selectinload(Quote.invoice), selectinload(Quote.project))
             .where(Quote.id == quote_id)
         )
         return self.session.execute(stmt).scalar_one_or_none()
@@ -21,7 +21,7 @@ class QuoteRepository:
     def list_all(self, client_id: int | None = None, status: str | None = None) -> list[Quote]:
         stmt = (
             select(Quote)
-            .options(selectinload(Quote.items), selectinload(Quote.client), selectinload(Quote.invoice))
+            .options(selectinload(Quote.items), selectinload(Quote.client), selectinload(Quote.invoice), selectinload(Quote.project))
             .order_by(Quote.id.desc())
         )
         if client_id is not None:

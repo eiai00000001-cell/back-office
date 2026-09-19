@@ -8,6 +8,7 @@ from app.repositories.company_profile_repository import CompanyProfileRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.invoice_repository import InvoiceRepository
 from app.repositories.payment_repository import PaymentRepository
+from app.repositories.project_repository import ProjectRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.services.attachment_service import AttachmentService
 from app.services.client_service import ClientService
@@ -18,6 +19,8 @@ from app.services.home_summary_service import HomeSummaryService
 from app.services.invoice_service import InvoiceService
 from app.services.numbering_service import NumberingService
 from app.services.payment_service import PaymentService
+from app.services.project_link_service import ProjectLinkService
+from app.services.project_service import ProjectService
 from app.services.pdf_generation_service import PdfGenerationService
 from app.services.quote_service import QuoteService
 from app.services.quote_to_invoice_conversion_service import QuoteToInvoiceConversionService
@@ -42,6 +45,7 @@ def get_invoice_service(db: Session = Depends(get_db)) -> InvoiceService:
         ClientRepository(db),
         get_numbering_service(db),
         TaxCalculationService(),
+        ProjectRepository(db),
     )
 
 
@@ -51,6 +55,7 @@ def get_quote_service(db: Session = Depends(get_db)) -> QuoteService:
         ClientRepository(db),
         get_numbering_service(db),
         TaxCalculationService(),
+        ProjectRepository(db),
     )
 
 
@@ -61,7 +66,7 @@ def get_conversion_service(db: Session = Depends(get_db)) -> QuoteToInvoiceConve
 
 
 def get_expense_service(db: Session = Depends(get_db)) -> ExpenseService:
-    return ExpenseService(ExpenseRepository(db))
+    return ExpenseService(ExpenseRepository(db), ProjectRepository(db))
 
 
 def get_attachment_service() -> AttachmentService:
@@ -83,4 +88,14 @@ def get_pdf_generation_service(db: Session = Depends(get_db)) -> PdfGenerationSe
 def get_dashboard_service(db: Session = Depends(get_db)) -> DashboardService:
     return DashboardService(
         InvoiceRepository(db), PaymentRepository(db), ExpenseRepository(db), QuoteRepository(db)
+    )
+
+
+def get_project_service(db: Session = Depends(get_db)) -> ProjectService:
+    return ProjectService(ProjectRepository(db), ClientRepository(db), get_payment_service(db))
+
+
+def get_project_link_service(db: Session = Depends(get_db)) -> ProjectLinkService:
+    return ProjectLinkService(
+        ProjectRepository(db), InvoiceRepository(db), QuoteRepository(db), ExpenseRepository(db)
     )

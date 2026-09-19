@@ -1,11 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import QuoteDetailPage from '../QuoteDetailPage'
 import { clientsApi } from '../../api/clients'
 import { quotesApi } from '../../api/quotes'
-import type { Client, Quote } from '../../types'
+import { projectsApi } from '../../api/projects'
+import type { Client, ProjectListItem, Quote } from '../../types'
 
 vi.mock('../../api/clients', () => ({
   clientsApi: {
@@ -25,8 +26,28 @@ vi.mock('../../api/quotes', () => ({
     remove: vi.fn(),
     pdfUrl: (id: number) => `/api/quotes/${id}/pdf`,
     convertToInvoice: vi.fn(),
+    linkProject: vi.fn(),
   },
 }))
+
+vi.mock('../../api/projects', () => ({
+  projectsApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    changeStatus: vi.fn(),
+    remove: vi.fn(),
+  },
+}))
+
+const mockedProjectsApi = vi.mocked(projectsApi)
+
+const sampleProjects: ProjectListItem[] = [
+  { id: 7, name: '自社サイトリニューアル', client_id: 5, client_name: '株式会社サンプル商事', status: 'IN_PROGRESS', due_date: null, description: null, quote_count: 0, invoice_count: 0, due_state: null },
+  { id: 8, name: 'ロゴデザイン制作', client_id: 5, client_name: '株式会社サンプル商事', status: 'DONE', due_date: null, description: null, quote_count: 0, invoice_count: 0, due_state: null },
+]
+
 
 const mockedClientsApi = vi.mocked(clientsApi)
 const mockedQuotesApi = vi.mocked(quotesApi)
@@ -50,6 +71,8 @@ const buildQuote = (overrides: Partial<Quote> = {}): Quote => ({
   tax_amount: 30000,
   total_amount: 330000,
   remarks: null,
+  project_id: null,
+  project_name: null,
   converted_invoice_id: null,
   converted_invoice_number: null,
   ...overrides,
@@ -71,6 +94,7 @@ function renderQuoteDetailPage(initialPath = '/quotes/1') {
 describe('QuoteDetailPage', () => {
   beforeEach(() => {
     mockedClientsApi.list.mockResolvedValue(sampleClients)
+    mockedProjectsApi.list.mockResolvedValue(sampleProjects)
   })
 
   afterEach(() => {
@@ -100,5 +124,17 @@ describe('QuoteDetailPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('取引先')).toHaveValue('新規取引先株式会社')
     })
+  })
+  it('編集保存時、現在の案件IDを project_id として必ず送る', async () => {
+    mockedQuotesApi.get.mockResolvedValue(buildQuote({ project_id: 7, project_name: '自社サイトリニューアル' }))
+    mockedQuotesApi.update.mockResolvedValue(buildQuote({ project_id: 7 }))
+
+    renderQuoteDetailPage()
+
+    await screen.findByDisplayValue('Webサイト制作作業')
+    await waitFor(() => expect(screen.getByLabelText('案件')).toHaveTextContent('自社サイトリニューアル'))
+    fireEvent.click(screen.getByRole('button', { name: '保存' }))
+
+    await waitFor(() => expect(mockedQuotesApi.update).toHaveBeenCalledWith(1, expect.objectContaining({ project_id: 7 })))
   })
 })

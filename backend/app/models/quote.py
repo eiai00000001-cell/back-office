@@ -10,6 +10,7 @@ class Quote(Base):
         CheckConstraint("status IN ('DRAFT','CONFIRMED')", name="ck_quotes_status"),
         Index("idx_quotes_client_id", "client_id"),
         Index("idx_quotes_issue_date", "issue_date"),
+        Index("idx_quotes_project_id", "project_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -22,6 +23,9 @@ class Quote(Base):
     tax_amount: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_amount: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     remarks: Mapped[str | None] = mapped_column(String, nullable=True)
+    project_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[str] = mapped_column(String, nullable=False)
     updated_at: Mapped[str] = mapped_column(String, nullable=False)
 
@@ -30,3 +34,8 @@ class Quote(Base):
         "QuoteItem", back_populates="quote", cascade="all, delete-orphan", order_by="QuoteItem.sort_order"
     )
     invoice = relationship("Invoice", back_populates="source_quote", uselist=False)
+    project = relationship("Project")
+
+    @property
+    def project_name(self) -> str | None:
+        return self.project.name if self.project else None

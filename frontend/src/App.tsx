@@ -11,6 +11,9 @@ import ReceivableListPage from './pages/ReceivableListPage'
 import ClientMasterPage from './pages/ClientMasterPage'
 import SettingsPage from './pages/SettingsPage'
 import DashboardPage from './pages/DashboardPage'
+import ProjectListPage from './pages/ProjectListPage'
+import ProjectKanbanPage from './pages/ProjectKanbanPage'
+import ProjectDetailPage from './pages/ProjectDetailPage'
 
 export default function App() {
   return (
@@ -27,6 +30,9 @@ export default function App() {
       <Route path="/clients" element={<ClientMasterPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/projects" element={<ProjectListPage />} />
+      <Route path="/projects/kanban" element={<ProjectKanbanPage />} />
+      <Route path="/projects/:id" element={<ProjectDetailPage />} />
     </Routes>
   )
 }

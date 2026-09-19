@@ -4,6 +4,9 @@ export type QuoteStatus = 'DRAFT' | 'CONFIRMED'
 export type PaymentStatus = 'UNPAID' | 'PARTIALLY_PAID' | 'PAID'
 export type PaymentMethod = 'CASH' | 'CREDIT_CARD' | 'BANK_TRANSFER' | 'OTHER'
 
+export type ProjectStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'WAITING_REVIEW' | 'DONE'
+export type DueState = 'OVERDUE' | 'UPCOMING'
+
 export const TAX_CATEGORY_LABELS: Record<TaxCategory, string> = {
   STANDARD_10: '標準10%',
   NON_TAXABLE: '非課税',
@@ -31,6 +34,21 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
   DRAFT: '作成中',
   CONFIRMED: '確定',
+}
+
+// カンバンの列順は宣言順(詳細設計書4.9.1)
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  NOT_STARTED: '未着手',
+  IN_PROGRESS: '進行中',
+  WAITING_REVIEW: '確認待ち',
+  DONE: '完了',
+}
+
+export const PROJECT_STATUSES = Object.keys(PROJECT_STATUS_LABELS) as ProjectStatus[]
+
+export const DUE_STATE_LABELS: Record<DueState, string> = {
+  OVERDUE: '超過',
+  UPCOMING: '接近',
 }
 
 export const ACCOUNT_CATEGORIES = [
@@ -99,6 +117,8 @@ export interface Invoice {
   issue_date: string | null
   due_date: string | null
   source_quote_id: number | null
+  project_id: number | null
+  project_name: string | null
   items: ItemResponse[]
   subtotal_amount: number
   tax_amount: number
@@ -118,6 +138,8 @@ export interface InvoiceListItem {
   due_date: string | null
   total_amount: number
   paid_amount: number
+  project_id: number | null
+  project_name: string | null
   payment_status: PaymentStatus
   is_overdue: boolean
 }
@@ -135,6 +157,8 @@ export interface Quote {
   tax_amount: number
   total_amount: number
   remarks: string | null
+  project_id: number | null
+  project_name: string | null
   converted_invoice_id: number | null
   converted_invoice_number: string | null
 }
@@ -148,6 +172,8 @@ export interface QuoteListItem {
   expiry_date: string | null
   total_amount: number
   status: QuoteStatus
+  project_id: number | null
+  project_name: string | null
 }
 
 export interface Expense {
@@ -161,6 +187,8 @@ export interface Expense {
   memo: string | null
   attachment_path: string | null
   attachment_original_name: string | null
+  project_id: number | null
+  project_name: string | null
 }
 
 export interface ExpenseSummary {
@@ -209,4 +237,49 @@ export interface ProfitLossSummary {
 export interface QuoteStatusSummary {
   monthly: DashboardQuoteMonthlySummary[]
   conversion_rate: number | null
+}
+
+// 案件・プロジェクト管理(F-08、SC-13〜15、イテレーション3・段階1)向け型定義
+
+export interface Project {
+  id: number
+  name: string
+  client_id: number | null
+  client_name: string | null
+  status: ProjectStatus
+  due_date: string | null
+  description: string | null
+}
+
+export interface ProjectListItem extends Project {
+  quote_count: number
+  invoice_count: number
+  due_state: DueState | null
+}
+
+export interface ProjectDetail extends ProjectListItem {
+  quotes: {
+    id: number
+    quote_number: string
+    issue_date: string | null
+    expiry_date: string | null
+    total_amount: number
+    status: QuoteStatus
+  }[]
+  invoices: {
+    id: number
+    invoice_number: string
+    issue_date: string | null
+    due_date: string | null
+    total_amount: number
+    payment_status: PaymentStatus
+  }[]
+  summary: {
+    quote_count: number
+    quote_total: number
+    invoice_count: number
+    invoice_total: number
+    paid_total: number
+    unpaid_total: number
+  }
 }

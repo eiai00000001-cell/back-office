@@ -13,6 +13,7 @@ from app.schemas.invoice import InvoiceItemInput
 from app.schemas.quote import QuoteCreateRequest
 from app.services.numbering_service import NumberingService
 from app.services.quote_service import QuoteService
+from app.repositories.project_repository import ProjectRepository
 from app.services.tax_calculation_service import TaxCalculationService
 from tests.conftest import now_iso
 
@@ -23,6 +24,7 @@ def _make_service(db_session):
         ClientRepository(db_session),
         NumberingService(InvoiceRepository(db_session), QuoteRepository(db_session)),
         TaxCalculationService(),
+        ProjectRepository(db_session),
     )
 
 

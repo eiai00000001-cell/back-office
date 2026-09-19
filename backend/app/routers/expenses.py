@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Response, UploadFile
 from fastapi.responses import FileResponse
 
-from app.dependencies import get_attachment_service, get_expense_service
+from app.dependencies import get_attachment_service, get_expense_service, get_project_link_service
 from app.exceptions import NotFoundError
 from app.schemas.expense import (
     ExpenseCreateRequest,
@@ -9,8 +9,10 @@ from app.schemas.expense import (
     ExpenseSummaryResponse,
     ExpenseUpdateRequest,
 )
+from app.schemas.project import ProjectLinkRequest
 from app.services.attachment_service import AttachmentService
 from app.services.expense_service import ExpenseService
+from app.services.project_link_service import ProjectLinkService
 
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
 
@@ -70,6 +72,15 @@ def delete_expense(
     # DBレコード削除に合わせて添付ファイル実体も削除し、孤立ファイルの蓄積を防ぐ(レビュー指摘10対応)。
     attachment_service.delete_all(expense_id)
     return Response(status_code=204)
+
+
+@router.put("/{expense_id}/project", response_model=ExpenseResponse)
+def link_expense_project(
+    expense_id: int,
+    dto: ProjectLinkRequest,
+    link_service: ProjectLinkService = Depends(get_project_link_service),
+):
+    return link_service.link_expense(expense_id, dto.project_id)
 
 
 @router.post("/{expense_id}/attachment", response_model=ExpenseResponse)

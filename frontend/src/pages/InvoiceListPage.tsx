@@ -93,6 +93,7 @@ export default function InvoiceListPage() {
               <TableRow>
                 <TableCell>請求書番号</TableCell>
                 <TableCell>取引先名</TableCell>
+                <TableCell>案件</TableCell>
                 <TableCell>発行日</TableCell>
                 <TableCell>支払期限</TableCell>
                 <TableCell align="right">合計金額</TableCell>
@@ -109,6 +110,7 @@ export default function InvoiceListPage() {
                 >
                   <TableCell>{invoice.invoice_number}</TableCell>
                   <TableCell>{invoice.client_name}</TableCell>
+                  <TableCell>{invoice.project_name ?? ''}</TableCell>
                   <TableCell>{invoice.issue_date ?? '-'}</TableCell>
                   <TableCell>
                     {invoice.due_date ?? '-'}

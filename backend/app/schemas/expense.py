@@ -13,6 +13,7 @@ class ExpenseCreateRequest(BaseModel):
     payee: str | None = Field(default=None, max_length=100)
     payment_method: PaymentMethod | None = None
     memo: str | None = Field(default=None, max_length=500)
+    project_id: int | None = None
 
     # レビュー指摘1対応: Field(description=...)は実際のエラーメッセージにならないため、
     # mode="before"バリデータで詳細設計書3.6章の日本語メッセージを明示的に返す。
@@ -57,6 +58,8 @@ class ExpenseResponse(BaseModel):
     memo: str | None
     attachment_path: str | None
     attachment_original_name: str | None
+    project_id: int | None = None
+    project_name: str | None = None
 
     model_config = {"from_attributes": True}
 

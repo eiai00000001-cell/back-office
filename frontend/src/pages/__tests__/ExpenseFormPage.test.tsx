@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ExpenseFormPage from '../ExpenseFormPage'
 import { expensesApi } from '../../api/expenses'
+import { projectsApi } from '../../api/projects'
 
 vi.mock('../../api/expenses', () => ({
   expensesApi: {
@@ -15,10 +16,16 @@ vi.mock('../../api/expenses', () => ({
     uploadAttachment: vi.fn(),
     attachmentUrl: (id: number) => `/api/expenses/${id}/attachment`,
     summary: vi.fn(),
+    linkProject: vi.fn(),
   },
 }))
 
+vi.mock('../../api/projects', () => ({
+  projectsApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), changeStatus: vi.fn(), remove: vi.fn() },
+}))
+
 const mockedExpensesApi = vi.mocked(expensesApi)
+const mockedProjectsApi = vi.mocked(projectsApi)
 
 function renderExpenseFormPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -41,6 +48,7 @@ function buildFile(name: string, sizeBytes: number, type: string): File {
 describe('ExpenseFormPage 添付ファイル検証', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockedProjectsApi.list.mockResolvedValue([])
   })
 
   afterEach(() => {
@@ -106,6 +114,8 @@ describe('ExpenseFormPage 添付ファイル検証', () => {
       memo: null,
       attachment_path: null,
       attachment_original_name: null,
+      project_id: null,
+      project_name: null,
     }
     mockedExpensesApi.create.mockResolvedValue(savedExpense)
     // 保存成功後、/expenses/1へnavigateしてisNewがfalseになり expense 取得クエリが発火するため
@@ -121,6 +131,6 @@ describe('ExpenseFormPage 添付ファイル検証', () => {
 
     fireEvent.click(saveButton)
 
-    await waitFor(() => expect(mockedExpensesApi.create).toHaveBeenCalled())
+    await waitFor(() => expect(mockedExpensesApi.create).toHaveBeenCalledWith(expect.objectContaining({ project_id: null })))
   })
 })

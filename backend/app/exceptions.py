@@ -15,3 +15,7 @@ class NotFoundError(DomainError):
 
 class ConflictError(DomainError):
     """Maps to HTTP 409."""
+
+
+class UnprocessableError(DomainError):
+    """Maps to HTTP 422. Raised when a referenced entity (e.g. project) does not exist."""

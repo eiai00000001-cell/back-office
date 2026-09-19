@@ -73,6 +73,7 @@ class InvoiceCreateRequest(BaseModel):
     due_date: str | None = None
     items: list[InvoiceItemInput]
     remarks: str | None = Field(default=None, max_length=1000)
+    project_id: int | None = None
 
 
 class InvoiceUpdateRequest(InvoiceCreateRequest):
@@ -87,6 +88,8 @@ class InvoiceResponse(BaseModel):
     issue_date: str | None
     due_date: str | None
     source_quote_id: int | None
+    project_id: int | None = None
+    project_name: str | None = None
     items: list[InvoiceItemResponse]
     subtotal_amount: int
     tax_amount: int
@@ -108,6 +111,8 @@ class InvoiceListItemResponse(BaseModel):
     due_date: str | None
     total_amount: int
     paid_amount: int
+    project_id: int | None = None
+    project_name: str | None = None
     payment_status: PaymentStatus
     is_overdue: bool
 

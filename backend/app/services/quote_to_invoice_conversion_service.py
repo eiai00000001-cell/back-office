@@ -47,6 +47,7 @@ class QuoteToInvoiceConversionService:
         invoice = Invoice(
             invoice_number=self.numbering_service.generate_number("invoice"),
             client_id=quote.client_id,
+            project_id=quote.project_id,
             issue_date=None,
             due_date=None,
             source_quote_id=quote.id,
