@@ -1,4 +1,6 @@
-"""請求書・見積書PDF生成。詳細設計書4.1ステップ10・4.3ステップ4。"""
+"""請求書・見積書・月次損益集計レポートPDF生成。詳細設計書4.1ステップ10・4.3ステップ4・4.11.5。"""
+from datetime import date
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
 
@@ -85,3 +87,23 @@ class PdfGenerationService:
             quote,
             [("発行日", quote.issue_date), ("有効期限", quote.expiry_date)],
         )
+
+    def render_monthly_pl_report_pdf(self, report) -> bytes:
+        """月次損益集計レポート(F-10、詳細設計書4.11.5)。report は report_builders.MonthlyPlReportData。"""
+        profile = self.company_profile_repository.get()
+        issuer_name = ""
+        if profile:
+            issuer_name = profile.business_name or profile.name or ""
+        first, last = report.months[0].month, report.months[-1].month
+        template = _env.get_template("monthly_pl_report.html")
+        html_content = template.render(
+            period_label=f"{first} 〜 {last}",
+            issuer_name=issuer_name,
+            created_on=date.today().isoformat(),
+            months=report.months,
+            total_sales=report.total_sales,
+            total_expense=report.total_expense,
+            total_profit=report.total_profit,
+            category_totals=report.category_totals,
+        )
+        return HTML(string=html_content).write_pdf()

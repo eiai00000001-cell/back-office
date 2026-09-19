@@ -9,7 +9,7 @@ Create Date: 2026-09-19 10:00:00.000000
   ALTER TABLE ... ADD COLUMN の直接SQLで行う。SQLiteのテーブル再作成は外部キー有効時に
   invoice_items / payments の子データを削除する恐れがあるため。
 - 既存行の project_id はNULLのまま(データの自動紐付けは行わない)。
-- main.py の create_all() が先に projects を作成済みの場合や再実行に備え、冪等に実装する。
+- 旧版の起動時create_all()で先に projects が作成されたDBや、再実行に備え、冪等に実装する。
 - ダウングレードは提供しない。適用前に db/back_office.db を手動コピーしておくこと。
 """
 from typing import Sequence, Union

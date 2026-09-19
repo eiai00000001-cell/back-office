@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatCurrency, formatLast12MonthsRangeLabel, formatMonthLabel, isOverdueDate } from '../format'
+import { defaultReportPeriod, formatCurrency, formatLast12MonthsRangeLabel, formatMonthLabel, isOverdueDate } from '../format'
 
 describe('formatCurrency', () => {
   it('formats an integer with thousands separators and a yen suffix', () => {
@@ -46,5 +46,13 @@ describe('formatLast12MonthsRangeLabel', () => {
 
   it('handles a base date in January by wrapping to the previous year', () => {
     expect(formatLast12MonthsRangeLabel(new Date(2026, 0, 5))).toBe('直近12ヶ月(2025年2月〜2026年1月)')
+  })
+})
+
+describe('defaultReportPeriod', () => {
+  it('現在月を含む直近12ヶ月(年またぎ)', () => {
+    expect(defaultReportPeriod(new Date(2026, 8, 19))).toEqual({ from: '2025-10', to: '2026-09' })
+    expect(defaultReportPeriod(new Date(2026, 0, 5))).toEqual({ from: '2025-02', to: '2026-01' })
+    expect(defaultReportPeriod(new Date(2026, 11, 31))).toEqual({ from: '2026-01', to: '2026-12' })
   })
 })

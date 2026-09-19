@@ -1,8 +1,14 @@
+import os
 import shutil
 import uuid
 from datetime import datetime
 
 import pytest
+
+# 実DB(db/back_office.db)へ接触しないための保証: appのimportより前に、DBパスを存在しない場所へ差し替える。
+# テストが誤って既定のエンジン/DB_PATHを使うと「unable to open database file」で失敗する(実DBは参照されない)。
+GUARD_DB_PATH = "/nonexistent-back-office-guard/back_office.db"
+os.environ["BACK_OFFICE_DB_PATH"] = GUARD_DB_PATH
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

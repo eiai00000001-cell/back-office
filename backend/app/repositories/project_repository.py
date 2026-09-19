@@ -6,6 +6,7 @@ from app.models.expense import Expense
 from app.models.invoice import Invoice
 from app.models.project import Project
 from app.models.quote import Quote
+from app.repositories.notification_ack_repository import delete_acknowledgement
 
 
 class ProjectRepository:
@@ -55,11 +56,12 @@ class ProjectRepository:
         """書類の紐付けを解除してから案件を削除する(詳細設計書4.9.6)。updated_atは更新しない。"""
         for model in (Invoice, Quote, Expense):
             self.session.execute(update(model).where(model.project_id == project.id).values(project_id=None))
+        delete_acknowledgement(self.session, "PROJECT_DUE", project.id)
         self.session.expire_all()
         self.session.delete(project)
         self.session.flush()
 
-    # 段階2(F-10 通知)で使用予定。段階1では未使用。
+    # 通知(F-09)用: 納期がbefore以前の未完了案件。
     def list_due_before(self, before: str) -> list[Project]:
         stmt = (
             select(Project)

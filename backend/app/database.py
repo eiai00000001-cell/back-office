@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from app.config import DB_DIR, SQLALCHEMY_DATABASE_URL
+from app.config import SQLALCHEMY_DATABASE_URL
 
 
 class Base(DeclarativeBase):
@@ -10,8 +10,6 @@ class Base(DeclarativeBase):
 
 
 def create_db_engine(database_url: str = SQLALCHEMY_DATABASE_URL):
-    if database_url.startswith("sqlite:///") and database_url != "sqlite:///:memory:":
-        DB_DIR.mkdir(parents=True, exist_ok=True)
     connect_args = {"check_same_thread": False}
     engine = create_engine(database_url, connect_args=connect_args)
 

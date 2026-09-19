@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>月次損益集計レポート</title>
+<style>
+  @page { size: A4 portrait; margin: 20mm 18mm; }
+  body { font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; font-size: 10.5pt; color: #222831; }
+  h1 { font-size: 18pt; margin: 0 0 4mm; }
+  h2 { font-size: 12pt; margin: 8mm 0 3mm; }
+  .meta { font-size: 10pt; color: #4b5563; margin-bottom: 6mm; }
+  .meta div { margin-bottom: 1mm; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #dde1e6; padding: 2mm 3mm; font-size: 10pt; }
+  th { background: #eef1f4; }
+  td.num, th.num { text-align: right; }
+  tr.total td { font-weight: 700; background: #f7f9fa; }
+  .neg { color: #b91c1c; }
+</style>
+</head>
+<body>
+  <h1>月次損益集計レポート</h1>
+  <div class="meta">
+    <div>対象期間: {{ period_label }}</div>
+    <div>発行者: {{ issuer_name }}</div>
+    <div>作成日: {{ created_on }}</div>
+  </div>
+
+  <table>
+    <thead><tr><th>年月</th><th class="num">売上</th><th class="num">経費合計</th><th class="num">損益</th></tr></thead>
+    <tbody>
+      {% for m in months %}
+      <tr>
+        <td>{{ m.month }}</td>
+        <td class="num">{{ "{:,}".format(m.sales) }}円</td>
+        <td class="num">{{ "{:,}".format(m.expense_total) }}円</td>
+        <td class="num {{ 'neg' if m.profit < 0 else '' }}">{{ "{:,}".format(m.profit) }}円</td>
+      </tr>
+      {% endfor %}
+      <tr class="total">
+        <td>期間合計</td>
+        <td class="num">{{ "{:,}".format(total_sales) }}円</td>
+        <td class="num">{{ "{:,}".format(total_expense) }}円</td>
+        <td class="num {{ 'neg' if total_profit < 0 else '' }}">{{ "{:,}".format(total_profit) }}円</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>勘定科目別の経費(期間合計)</h2>
+  <table>
+    <thead><tr><th>勘定科目</th><th class="num">金額</th></tr></thead>
+    <tbody>
+      {% for category, amount in category_totals %}
+      <tr><td>{{ category }}</td><td class="num">{{ "{:,}".format(amount) }}円</td></tr>
+      {% else %}
+      <tr><td colspan="2">対象期間に経費はありません</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.models.invoice import Invoice
 from app.models.quote import Quote
 from app.models.quote_item import QuoteItem
+from app.repositories.notification_ack_repository import delete_acknowledgement
 
 
 class QuoteRepository:
@@ -40,6 +41,7 @@ class QuoteRepository:
         return quote
 
     def delete(self, quote: Quote) -> None:
+        delete_acknowledgement(self.session, "QUOTE_EXPIRY", quote.id)
         self.session.delete(quote)
         self.session.flush()
 
@@ -98,3 +100,14 @@ class QuoteRepository:
             .where(converted)
         )
         return self.session.execute(stmt).scalar_one()
+
+    def list_expiring_before(self, before: str) -> list[Quote]:
+        """通知(F-09)用: 有効期限がbefore以前で、請求書へ変換済みでない見積書(下書き・確定とも対象)。"""
+        converted = exists().where(Invoice.source_quote_id == Quote.id)
+        stmt = (
+            select(Quote)
+            .options(selectinload(Quote.client))
+            .where(Quote.expiry_date.is_not(None), Quote.expiry_date <= before, ~converted)
+            .order_by(Quote.expiry_date, Quote.id)
+        )
+        return list(self.session.execute(stmt).scalars().all())

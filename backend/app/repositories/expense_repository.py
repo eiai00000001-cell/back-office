@@ -64,3 +64,15 @@ class ExpenseRepository:
         if date_to:
             stmt = stmt.where(Expense.expense_date <= date_to)
         return list(self.session.execute(stmt).all())
+
+    def aggregate_by_month_and_category(self, date_from: str, date_to: str) -> list[tuple[str, str, int]]:
+        """月×勘定科目の経費合計(F-10の月次損益集計用。詳細設計書4.12.1)。"""
+        year_month = func.strftime("%Y-%m", Expense.expense_date)
+        stmt = (
+            select(year_month, Expense.account_category, func.coalesce(func.sum(Expense.amount), 0))
+            .where(Expense.expense_date >= date_from)
+            .where(Expense.expense_date <= date_to)
+            .group_by(year_month, Expense.account_category)
+            .order_by(year_month, Expense.account_category)
+        )
+        return list(self.session.execute(stmt).all())

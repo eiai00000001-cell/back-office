@@ -28,3 +28,17 @@ export function formatLast12MonthsRangeLabel(baseDate: Date = new Date()): strin
   }
   return `直近12ヶ月(${startYear}年${startMonth}月〜${endYear}年${endMonth}月)`
 }
+
+// レポート出力(SC-18)の初期期間。現在月を含む直近12ヶ月(詳細設計書3.18章・4.8.1章と同一算出)。
+export function defaultReportPeriod(baseDate: Date = new Date()): { from: string; to: string } {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const endYear = baseDate.getFullYear()
+  const endMonth = baseDate.getMonth() + 1
+  let startYear = endYear
+  let startMonth = endMonth - 11
+  if (startMonth <= 0) {
+    startMonth += 12
+    startYear -= 1
+  }
+  return { from: `${startYear}-${pad(startMonth)}`, to: `${endYear}-${pad(endMonth)}` }
+}

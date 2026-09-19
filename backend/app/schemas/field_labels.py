@@ -29,6 +29,10 @@ FIELD_LABELS: dict[str, str] = {
     "payment_method": "支払方法",
     "memo": "メモ",
     "payment_date": "入金日",
+    "category": "種別",
+    "is_recurring": "毎年繰り返し",
+    "source_type": "通知の種類",
+    "source_id": "通知の対象",
 }
 
 # (リクエストパスの部分文字列, フィールド名) -> 画面ラベル。同名フィールドで画面ラベルが異なるもの。
@@ -36,6 +40,7 @@ PATH_LABEL_OVERRIDES: dict[tuple[str, str], str] = {
     ("/company-profile", "name"): "氏名",
     ("/projects", "name"): "案件名",
     ("/projects", "due_date"): "納期",
+    ("/deadlines", "due_date"): "期限日",
     ("/payments", "amount"): "入金額",
     ("/payments", "remarks"): "備考",
 }

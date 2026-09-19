@@ -14,6 +14,9 @@ import DashboardPage from './pages/DashboardPage'
 import ProjectListPage from './pages/ProjectListPage'
 import ProjectKanbanPage from './pages/ProjectKanbanPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
+import NotificationListPage from './pages/NotificationListPage'
+import DeadlineListPage from './pages/DeadlineListPage'
+import ReportExportPage from './pages/ReportExportPage'
 
 export default function App() {
   return (
@@ -33,6 +36,9 @@ export default function App() {
       <Route path="/projects" element={<ProjectListPage />} />
       <Route path="/projects/kanban" element={<ProjectKanbanPage />} />
       <Route path="/projects/:id" element={<ProjectDetailPage />} />
+      <Route path="/notifications" element={<NotificationListPage />} />
+      <Route path="/deadlines" element={<DeadlineListPage />} />
+      <Route path="/reports" element={<ReportExportPage />} />
     </Routes>
   )
 }

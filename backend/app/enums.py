@@ -60,3 +60,20 @@ class ProjectStatus(StrEnum):
     IN_PROGRESS = "IN_PROGRESS"
     WAITING_REVIEW = "WAITING_REVIEW"
     DONE = "DONE"
+
+
+class DeadlineCategory(StrEnum):
+    """手動登録の期限の種別(詳細設計書3.17章)。"""
+
+    TAX_FILING = "TAX_FILING"
+    CONTRACT_RENEWAL = "CONTRACT_RENEWAL"
+    OTHER = "OTHER"
+
+
+class NotificationSourceType(StrEnum):
+    """通知の種類(詳細設計書4.10.1章)。宣言順は同日の並び順(TYPE_ORDER)を兼ねる。"""
+
+    INVOICE_DUE = "INVOICE_DUE"
+    QUOTE_EXPIRY = "QUOTE_EXPIRY"
+    PROJECT_DUE = "PROJECT_DUE"
+    DEADLINE = "DEADLINE"

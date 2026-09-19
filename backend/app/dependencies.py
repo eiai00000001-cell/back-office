@@ -5,8 +5,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.repositories.client_repository import ClientRepository
 from app.repositories.company_profile_repository import CompanyProfileRepository
+from app.repositories.deadline_repository import DeadlineRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.invoice_repository import InvoiceRepository
+from app.repositories.notification_ack_repository import NotificationAckRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.quote_repository import QuoteRepository
@@ -14,15 +16,24 @@ from app.services.attachment_service import AttachmentService
 from app.services.client_service import ClientService
 from app.services.company_profile_service import CompanyProfileService
 from app.services.dashboard_service import DashboardService
+from app.services.deadline_service import DeadlineService
 from app.services.expense_service import ExpenseService
 from app.services.home_summary_service import HomeSummaryService
 from app.services.invoice_service import InvoiceService
+from app.services.notification_service import (
+    DeadlineProvider,
+    InvoiceDueProvider,
+    NotificationService,
+    ProjectDueProvider,
+    QuoteExpiryProvider,
+)
 from app.services.numbering_service import NumberingService
 from app.services.payment_service import PaymentService
 from app.services.project_link_service import ProjectLinkService
 from app.services.project_service import ProjectService
 from app.services.pdf_generation_service import PdfGenerationService
 from app.services.quote_service import QuoteService
+from app.services.report_service import ReportService, build_report_service
 from app.services.quote_to_invoice_conversion_service import QuoteToInvoiceConversionService
 from app.services.tax_calculation_service import TaxCalculationService
 
@@ -99,3 +110,25 @@ def get_project_link_service(db: Session = Depends(get_db)) -> ProjectLinkServic
     return ProjectLinkService(
         ProjectRepository(db), InvoiceRepository(db), QuoteRepository(db), ExpenseRepository(db)
     )
+
+
+def get_deadline_service(db: Session = Depends(get_db)) -> DeadlineService:
+    return DeadlineService(DeadlineRepository(db), NotificationAckRepository(db))
+
+
+def get_notification_service(db: Session = Depends(get_db)) -> NotificationService:
+    deadline_repository = DeadlineRepository(db)
+    ack_repository = NotificationAckRepository(db)
+    providers = [
+        InvoiceDueProvider(InvoiceRepository(db), get_payment_service(db)),
+        QuoteExpiryProvider(QuoteRepository(db)),
+        ProjectDueProvider(ProjectRepository(db)),
+        DeadlineProvider(deadline_repository),
+    ]
+    return NotificationService(
+        providers, ack_repository, deadline_repository, DeadlineService(deadline_repository, ack_repository)
+    )
+
+
+def get_report_service(db: Session = Depends(get_db)) -> ReportService:
+    return build_report_service(db)

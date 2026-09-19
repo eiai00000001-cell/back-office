@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SC-17 期限一覧・登録・編集 - EIAI TEC 事務管理システム</title>
+<style>
+:root{
+  --color-bg:#f4f6f8;--color-surface:#ffffff;--color-border:#dde1e6;--color-text:#222831;
+  --color-text-sub:#6b7280;--color-primary:#2c5f7c;--color-primary-dark:#1f4a61;
+  --color-accent:#c0392b;--color-warn-bg:#fdecea;--color-soon:#b45309;--color-soon-bg:#fff4e0;--radius:6px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+.app-header{background:var(--color-primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header .title{font-size:18px;font-weight:600;}
+.app-header .back-link{color:#e6eef2;text-decoration:none;font-size:13px;}
+.app-header .back-link:hover{text-decoration:underline;}
+.container{max-width:1200px;margin:0 auto;padding:24px;}
+h1.page-title{font-size:20px;margin:0 0 16px;}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;}
+.filter-bar .field{display:flex;flex-direction:column;gap:4px;}
+.filter-bar label{font-size:12px;color:var(--color-text-sub);}
+select,input[type=text],input[type=date],textarea{padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;font-family:inherit;background:#fff;}
+select{min-width:160px;}
+.btn{display:inline-block;padding:8px 16px;border-radius:4px;border:1px solid var(--color-border);background:#fff;color:var(--color-text);font-size:13px;cursor:pointer;text-decoration:none;font-family:inherit;}
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-dark);}
+.btn-small{padding:4px 10px;font-size:12px;}
+.btn-danger{color:var(--color-accent);border-color:var(--color-accent);}
+.tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--color-border);}
+.tabs a{padding:8px 22px;text-decoration:none;color:var(--color-text-sub);font-size:14px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tabs a.active{color:var(--color-primary);border-bottom-color:var(--color-primary);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:left;font-size:13px;}
+th{background:#eef1f4;color:var(--color-text-sub);font-weight:600;white-space:nowrap;}
+td.amount{text-align:right;white-space:nowrap;}
+tr.row-link{cursor:pointer;}
+tr.row-link:hover{background:#f7f9fa;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap;}
+.st-NS{background:#6b7280;}.st-IP{background:#1d4ed8;}.st-WR{background:#b45309;}.st-DN{background:#15803d;}
+.badge-unpaid{background:#b91c1c;}.badge-partial{background:#b45309;}.badge-paid{background:#15803d;}
+.badge-draft{background:#6b7280;}.badge-confirmed{background:#1d4ed8;}
+.due-over{color:var(--color-accent);font-weight:700;}
+.due-soon{color:var(--color-soon);font-weight:700;}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:700;margin-left:6px;}
+.tag-over{background:var(--color-accent);color:#fff;}
+.tag-soon{background:var(--color-soon);color:#fff;}
+.muted{color:var(--color-text-sub);}
+.section-title{font-size:15px;font-weight:600;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--color-border);}
+tr.overdue{background:var(--color-warn-bg);}tr.overdue td:first-child{border-left:3px solid var(--color-accent);}
+
+.notice-ack{opacity:.55;}
+.kind-tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;background:#eef1f4;color:var(--color-text-sub);white-space:nowrap;}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;}
+.switch .track{width:36px;height:20px;border-radius:10px;background:#c5cbd3;position:relative;display:inline-block;}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;}
+.switch.on .track{background:var(--color-primary);}.switch.on .track::after{left:18px;}
+.err-box{background:var(--color-soon-bg);border:1px solid #f0c98a;color:var(--color-soon);padding:8px 12px;border-radius:4px;font-size:13px;margin-bottom:14px;}
+.note{background:#eef4f7;border-left:3px solid var(--color-primary);padding:8px 12px;font-size:12px;margin:0 0 14px;}
+.form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.form-row label{font-size:12px;color:var(--color-text-sub);}
+.req{color:var(--color-accent);font-size:11px;margin-left:4px;}
+.dialog{border:2px solid var(--color-primary);border-radius:var(--radius);background:#fff;padding:20px;max-width:560px;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+.dialog h2{font-size:16px;margin:0 0 14px;}
+.dialog .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;}
+.field-err{color:var(--color-accent);font-size:12px;}
+input[type=month]{padding:7px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:13px;font-family:inherit;}
+.type-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.type-item{border:1px solid var(--color-border);border-radius:4px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;}
+.type-item.sel{border-color:var(--color-primary);background:#eef4f7;}
+.type-item .n{font-weight:600;}.type-item .s{font-size:12px;color:var(--color-text-sub);}
+.warn-text{color:var(--color-soon);font-size:12px;}
+.result-ok{background:#e8f5ec;border:1px solid #b5dcc0;color:#15803d;padding:10px 14px;border-radius:4px;font-size:13px;}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="title">事務管理システム</div>
+  <a href="./SC-01_home.html" class="back-link">← ホームへ</a>
+</header>
+<div class="container">
+  <h1 class="page-title">期限の登録・編集</h1>
+  <div class="card">
+    <div class="toolbar">
+      <a href="./SC-16_notification-list.html" class="btn">← 通知一覧へ</a>
+      <button class="btn btn-primary">新規登録</button>
+    </div>
+    <p class="note">確定申告書類の作成や契約書の管理は行いません。期限の登録と通知のみです。</p>
+    <p class="muted" style="font-size:12px;margin:0 0 10px;">期限日の近い順で表示しています。</p>
+    <table>
+      <thead><tr><th>名称</th><th>期限日</th><th>種別</th><th>毎年繰り返し</th><th>メモ</th><th>操作</th></tr></thead>
+      <tbody>
+        <tr><td>契約更新(サンプル保守契約)</td><td><span class="due-soon">2026-09-30</span><span class="tag tag-soon">接近</span></td><td><span class="kind-tag">契約更新</span></td><td>なし</td><td class="muted">更新の連絡は9月中</td><td style="white-space:nowrap"><button class="btn btn-small">編集</button> <button class="btn btn-small btn-danger">削除</button></td></tr>
+        <tr><td>サンプル事務所 賃貸契約更新</td><td>2026-12-15</td><td><span class="kind-tag">契約更新</span></td><td>毎年</td><td class="muted">-</td><td style="white-space:nowrap"><button class="btn btn-small">編集</button> <button class="btn btn-small btn-danger">削除</button></td></tr>
+        <tr><td>確定申告(サンプル)</td><td>2027-03-15</td><td><span class="kind-tag">確定申告</span></td><td>毎年</td><td class="muted">日付は本人が入力</td><td style="white-space:nowrap"><button class="btn btn-small">編集</button> <button class="btn btn-small btn-danger">削除</button></td></tr>
+        <tr><td>サンプル保険 年次見直し</td><td>2027-06-30</td><td><span class="kind-tag">その他</span></td><td>なし</td><td class="muted">-</td><td style="white-space:nowrap"><button class="btn btn-small">編集</button> <button class="btn btn-small btn-danger">削除</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="section-label" style="font-size:12px;color:var(--color-text-sub);margin:0 0 8px;">登録・編集ダイアログの表示例(「新規登録」「編集」押下時に開く。確認用に入力エラー状態を表示)</p>
+  <div class="dialog">
+    <h2>期限の登録</h2>
+    <div class="form-row"><label>名称<span class="req">必須</span></label><input type="text" value="" placeholder="例: 契約更新(サンプル)" maxlength="100"><span class="field-err">名称を入力してください</span></div>
+    <div class="form-row"><label>期限日<span class="req">必須</span></label><input type="date"><span class="field-err">期限日を入力してください</span></div>
+    <div class="form-row"><label>種別<span class="req">必須</span></label><select><option>確定申告</option><option>契約更新</option><option selected>その他</option></select></div>
+    <div class="form-row"><label>メモ(最大500文字)</label><textarea rows="3"></textarea></div>
+    <div class="form-row"><label class="switch" style="color:var(--color-text);font-size:13px"><input type="checkbox"> 毎年繰り返す</label></div>
+    <div class="actions"><button class="btn">キャンセル</button><button class="btn btn-primary">保存</button></div>
+  </div>
+</div>
+</body>
+</html>

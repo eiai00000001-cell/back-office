@@ -287,3 +287,83 @@ export interface ProjectDetail extends ProjectListItem {
     unpaid_total: number
   }
 }
+
+// リマインダー/通知(F-09、SC-16・17、イテレーション3・段階2)向け型定義
+
+export type NotificationSourceType = 'INVOICE_DUE' | 'QUOTE_EXPIRY' | 'PROJECT_DUE' | 'DEADLINE'
+export type DeadlineCategory = 'TAX_FILING' | 'CONTRACT_RENEWAL' | 'OTHER'
+
+// 通知の種類の表示名(mockups SC-01・SC-16)
+export const NOTIFICATION_KIND_LABELS: Record<NotificationSourceType, string> = {
+  INVOICE_DUE: '請求書の支払期限',
+  QUOTE_EXPIRY: '見積書の有効期限',
+  PROJECT_DUE: '案件の納期',
+  DEADLINE: '登録した期限',
+}
+
+export const DEADLINE_CATEGORY_LABELS: Record<DeadlineCategory, string> = {
+  TAX_FILING: '確定申告',
+  CONTRACT_RENEWAL: '契約更新',
+  OTHER: 'その他',
+}
+
+export interface NotificationItem {
+  source_type: NotificationSourceType
+  source_id: number
+  title: string
+  due_date: string
+  state: DueState
+  days_diff: number
+  link: string
+  category: DeadlineCategory | null
+  acknowledged: boolean
+}
+
+export interface NotificationList {
+  items: NotificationItem[]
+  errors: NotificationSourceType[]
+}
+
+export interface NotificationSummary {
+  unacknowledged_count: number
+  overdue_count: number
+  items: NotificationItem[]
+  errors: NotificationSourceType[]
+}
+
+export interface Deadline {
+  id: number
+  name: string
+  due_date: string
+  category: DeadlineCategory
+  memo: string | null
+  is_recurring: boolean
+  due_state: DueState | null
+}
+
+// レポート出力(F-10、SC-18)向け型定義
+
+export type ReportType =
+  | 'invoices'
+  | 'payments'
+  | 'quotes'
+  | 'expenses'
+  | 'monthly-pl'
+  | 'projects'
+  | 'accounting-export'
+export type ReportFormat = 'csv' | 'pdf'
+
+export const REPORT_TYPES: { value: ReportType; name: string; formats: string; basis: string }[] = [
+  { value: 'invoices', name: '請求書一覧', formats: 'CSV', basis: '発行日' },
+  { value: 'payments', name: '入金記録', formats: 'CSV', basis: '入金日' },
+  { value: 'quotes', name: '見積書一覧', formats: 'CSV', basis: '発行日' },
+  { value: 'expenses', name: '経費一覧', formats: 'CSV', basis: '発生日' },
+  { value: 'monthly-pl', name: '月次損益集計レポート', formats: 'PDF または CSV', basis: '請求書の発行日・経費の発生日' },
+  { value: 'projects', name: '案件別サマリー', formats: 'CSV', basis: '案件の納期または紐付き請求書の発行日' },
+  {
+    value: 'accounting-export',
+    name: '会計ソフト連携用エクスポート(汎用CSV)',
+    formats: 'CSV',
+    basis: '売上は発行日・経費は発生日',
+  },
+]

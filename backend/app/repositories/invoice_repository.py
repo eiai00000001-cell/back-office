@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models.invoice import Invoice
 from app.models.invoice_item import InvoiceItem
+from app.repositories.notification_ack_repository import delete_acknowledgement
 
 
 class InvoiceRepository:
@@ -37,6 +38,7 @@ class InvoiceRepository:
         return invoice
 
     def delete(self, invoice: Invoice) -> None:
+        delete_acknowledgement(self.session, "INVOICE_DUE", invoice.id)
         self.session.delete(invoice)
         self.session.flush()
 
@@ -86,3 +88,13 @@ class InvoiceRepository:
             .order_by(year_month)
         )
         return list(self.session.execute(stmt).all())
+
+    def list_due_before(self, before: str) -> list[Invoice]:
+        """通知(F-09)用: 支払期限がbefore(YYYY-MM-DD)以前の請求書。入金ステータスの判定は呼び出し側で行う。"""
+        stmt = (
+            select(Invoice)
+            .options(selectinload(Invoice.payments), selectinload(Invoice.client))
+            .where(Invoice.due_date.is_not(None), Invoice.due_date <= before)
+            .order_by(Invoice.due_date, Invoice.id)
+        )
+        return list(self.session.execute(stmt).scalars().all())

@@ -6,17 +6,30 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import STATIC_DIR
-from app.database import Base, engine
 from app.schemas.common import ID_ERROR_MESSAGE
 from app.schemas.field_labels import resolve_label
 from app.exceptions import ConflictError, NotFoundError, UnprocessableError, ValidationFailedError
-from app.routers import clients, company_profile, dashboard, expenses, health, home, invoices, payments, projects, quotes
+from app.routers import (
+    clients,
+    company_profile,
+    dashboard,
+    deadlines,
+    expenses,
+    health,
+    home,
+    invoices,
+    notifications,
+    payments,
+    projects,
+    quotes,
+    reports,
+)
 
 logger = logging.getLogger("app")
 
 app = FastAPI(title="EIAI TEC 事務管理システム")
 
-Base.metadata.create_all(bind=engine)
+# スキーマ作成はAlembicマイグレーション(起動時自動適用: app/migrate.py)のみで行う。import時にDBへ接続しない。
 
 app.include_router(health.router)
 app.include_router(clients.router)
@@ -28,6 +41,9 @@ app.include_router(payments.router)
 app.include_router(home.router)
 app.include_router(dashboard.router)
 app.include_router(projects.router)
+app.include_router(notifications.router)
+app.include_router(deadlines.router)
+app.include_router(reports.router)
 
 
 @app.exception_handler(ValidationFailedError)
