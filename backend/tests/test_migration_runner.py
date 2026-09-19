@@ -199,3 +199,49 @@ def test_cli_prints_summary_to_stderr_and_detail_to_stdout(monkeypatch, capsys):
     out = capsys.readouterr()
     assert out.err.strip() == "要約です"
     assert "詳細です" in out.out
+
+
+# --- 指摘27 ---
+
+
+def _sig_of(tmp_path, name, ddl):
+    from app.migration_runner import _schema_signature
+
+    path = tmp_path / name
+    conn = sqlite3.connect(path)
+    conn.execute(ddl)
+    conn.commit()
+    conn.close()
+    return _schema_signature(path)
+
+
+def test_signature_distinguishes_column_default(tmp_path):
+    a = _sig_of(tmp_path, "a.db", "CREATE TABLE t (id INTEGER PRIMARY KEY, s TEXT DEFAULT 'x')")
+    b = _sig_of(tmp_path, "b.db", "CREATE TABLE t (id INTEGER PRIMARY KEY, s TEXT DEFAULT 'y')")
+    assert a != b
+
+
+def test_signature_distinguishes_unique_constraint(tmp_path):
+    a = _sig_of(tmp_path, "a.db", "CREATE TABLE t (id INTEGER PRIMARY KEY, s TEXT UNIQUE)")
+    b = _sig_of(tmp_path, "b.db", "CREATE TABLE t (id INTEGER PRIMARY KEY, s TEXT)")
+    assert a != b
+
+
+def test_upgrade_failure_after_stamp_explains_restore(tmp_path, monkeypatch):
+    from app import migration_runner
+
+    db_path = tmp_path / "legacy.db"
+    _create_all_db(db_path)
+    real_upgrade = migration_runner.command.upgrade
+
+    def upgrade(cfg, rev):
+        if str(db_path) in cfg.attributes["database_url"]:  # 参照DBでの照合は実物、対象DBへの適用のみ失敗させる
+            raise RuntimeError("boom")
+        return real_upgrade(cfg, rev)
+
+    monkeypatch.setattr(migration_runner.command, "upgrade", upgrade)
+    with pytest.raises(MigrationError) as exc:
+        upgrade_to_head(db_path)
+    msg = str(exc.value)
+    assert "\n" not in msg
+    assert "stamp" in msg and "復元" in msg and ".before-" in msg

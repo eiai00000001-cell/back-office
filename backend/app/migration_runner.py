@@ -81,7 +81,11 @@ def _norm_type(decl: str) -> str:
 
 
 def _schema_signature(db_path: Path) -> dict:
-    """テーブル・列・外部キー・インデックスの構造を比較用に取り出す(alembic_versionは除く)。"""
+    """テーブル・列・外部キー・インデックスの構造を比較用に取り出す(alembic_versionは除く)。
+
+    比較対象: 列(名・型・NOT NULL・既定値・主キー)、外部キー(参照先・ON DELETE)、UNIQUE(列の組)、明示インデックス。
+    比較対象外: CHECK制約、ON UPDATE、トリガ(PRAGMAで取得できない/表記差が大きいため)。
+    """
     conn = sqlite3.connect(db_path)
     try:
         tables = [
@@ -93,14 +97,17 @@ def _schema_signature(db_path: Path) -> dict:
         ]
         sig = {}
         for t in sorted(tables):
-            cols = sorted((c[1], _norm_type(c[2]), c[3], c[5]) for c in conn.execute(f'PRAGMA table_info("{t}")'))
+            cols = sorted((c[1], _norm_type(c[2]), c[3], c[4], c[5]) for c in conn.execute(f'PRAGMA table_info("{t}")'))
             fks = sorted((f[2], f[3], f[4], f[6].upper()) for f in conn.execute(f'PRAGMA foreign_key_list("{t}")'))
             idx = []
-            for i in conn.execute(f'PRAGMA index_list("{t}")'):
+            uniques = []
+            for i in conn.execute(f'PRAGMA index_list("{t}")').fetchall():
+                if i[2] and i[3] != "pk":  # UNIQUE(制約・明示インデックスのいずれも列の組で比較)
+                    uniques.append(tuple(c[2] for c in conn.execute(f'PRAGMA index_info("{i[1]}")')))
                 if i[3] == "c":  # 明示作成のインデックスのみ(制約由来の自動インデックスは除く)
                     cols_i = tuple(c[2] for c in conn.execute(f'PRAGMA index_info("{i[1]}")'))
                     idx.append((i[1], i[2], cols_i))
-            sig[t] = (cols, fks, sorted(idx))
+            sig[t] = (cols, fks, sorted(idx), sorted(uniques))
         return sig
     finally:
         conn.close()
@@ -132,12 +139,12 @@ def upgrade_to_head(db_path: Path = DB_PATH) -> MigrationResult:
     head = ScriptDirectory.from_config(_alembic_config(db_path)).get_current_head()
     existed = db_path.exists()
     backup_path: Path | None = None
+    stamp_rev: str | None = None
     try:
         if existed:
             current = _current_revision(db_path)
             if current == head:
                 return MigrationResult(applied=False)
-            stamp_rev: str | None = None
             if current is None and _has_user_tables(db_path):
                 stamp_rev = _find_matching_revision(db_path)
                 if stamp_rev is None:
@@ -155,11 +162,16 @@ def upgrade_to_head(db_path: Path = DB_PATH) -> MigrationResult:
     except MigrationError:
         raise
     except Exception as exc:
-        hint = (
-            f"適用前の退避コピー({backup_path})から復元できます。"
-            if backup_path
-            else "データベースファイルは退避コピー前のため変更されていません。"
-        )
+        if backup_path and stamp_rev is not None:
+            hint = (
+                "更新履歴の登録(stamp)は済んでいますが更新は完了していません。"
+                f"アプリを停止したうえで、適用前の退避コピー({backup_path})をデータベースファイルへ上書きコピーして復元し、"
+                "サポートへご連絡ください。"
+            )
+        elif backup_path:
+            hint = f"適用前の退避コピー({backup_path})から復元できます。"
+        else:
+            hint = "データベースファイルは退避コピー前のため変更されていません。"
         raise MigrationError(
             f"データベースのマイグレーション(更新)に失敗しました。{hint}",
             detail=str(exc),

@@ -26,7 +26,7 @@ def env(tmp_path):
     _exe(bins / "open", f'echo "$@" >> "{tmp_path}/open.log"\n')
     _exe(bins / "osascript", f'echo "$@" >> "{tmp_path}/dialog.log"\n')
     _exe(backend / ".venv/bin/uvicorn", "sleep 0\n")
-    e = dict(os.environ, PATH=f"{bins}:{os.environ['PATH']}", LAUNCH_HEALTH_MAX_ATTEMPTS="2", LAUNCH_HEALTH_INTERVAL="0.05")
+    e = dict(os.environ, PATH=f"{bins}:{os.environ['PATH']}", LAUNCH_HEALTH_MAX_ATTEMPTS="2", LAUNCH_HEALTH_INTERVAL="0.05", LAUNCH_LOCK_GRACE="0.5")
     return tmp_path, backend, e
 
 
@@ -81,3 +81,92 @@ def test_live_lock_blocks_second_launch(env):
         assert r.returncode in (0, 1)
     finally:
         holder.kill()
+
+
+# --- 指摘24〜26 ---
+
+
+def test_lock_without_pid_yet_is_not_treated_as_stale(env):
+    """mkdir直後でPID未記入のロックは、猶予内にPIDが書かれれば有効なロックとして扱う(指摘24-1)。"""
+    tmp, backend, e = env
+    marker = tmp / "migrated"
+    _exe(backend / ".venv/bin/python", f"touch {marker}\nexit 0\n")
+    lock = backend / "run" / "launch.lock"
+    lock.mkdir(parents=True)
+    holder = subprocess.Popen(["sleep", "20"])
+    writer = subprocess.Popen(["bash", "-c", f"sleep 0.2; echo {holder.pid} > {lock}/pid"])
+    try:
+        _run(backend, e)
+        assert not marker.exists()
+        assert lock.exists()
+    finally:
+        writer.wait()
+        holder.kill()
+
+
+def test_concurrent_launches_on_stale_lock_migrate_only_once(env):
+    """古いロックを複数が同時に検知しても、取得できるのは1つだけ(指摘24-2)。"""
+    tmp, backend, e = env
+    log = tmp / "migrated.log"
+    _exe(backend / ".venv/bin/python", f"echo x >> {log}\nsleep 1.5\nexit 0\n")
+    lock = backend / "run" / "launch.lock"
+    lock.mkdir(parents=True)
+    (lock / "pid").write_text("999999")
+    script = str(backend / "scripts" / "launch.sh")
+    procs = [subprocess.Popen(["bash", script], env=e, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(5)]
+    for p in procs:
+        p.wait(timeout=30)
+    assert len(log.read_text().split()) == 1
+    assert not lock.exists()
+
+
+def test_live_pid_but_old_lock_is_treated_as_stale(env):
+    """PIDが再利用されていてもロックが期限より古ければ古いロックとして回復する(指摘24-3)。"""
+    tmp, backend, e = env
+    marker = tmp / "migrated"
+    _exe(backend / ".venv/bin/python", f"touch {marker}\nexit 0\n")
+    lock = backend / "run" / "launch.lock"
+    lock.mkdir(parents=True)
+    holder = subprocess.Popen(["sleep", "20"])
+    try:
+        pid_file = lock / "pid"
+        pid_file.write_text(str(holder.pid))
+        os.utime(pid_file, (1_000_000_000, 1_000_000_000))
+        e["LAUNCH_LOCK_STALE_SECONDS"] = "60"
+        _run(backend, e)
+        assert marker.exists()
+        assert not lock.exists()
+    finally:
+        holder.kill()
+
+
+def test_healthy_after_lock_acquired_skips_second_uvicorn(env):
+    """ロック取得直後にヘルスチェックが成功したら、起動せずブラウザだけ開く(指摘25)。"""
+    tmp, backend, e = env
+    marker = tmp / "migrated"
+    started = tmp / "uvicorn_started"
+    _exe(backend / ".venv/bin/python", f"touch {marker}\nexit 0\n")
+    _exe(backend / ".venv/bin/uvicorn", f"touch {started}\n")
+    _exe(
+        tmp / "bin" / "curl",
+        f'n=$(cat {tmp}/cnt 2>/dev/null || echo 0); n=$((n+1)); echo $n > {tmp}/cnt; '
+        'if [ $n -ge 2 ]; then echo 200; else echo 000; fi\n',
+    )
+    r = _run(backend, e)
+    assert r.returncode == 0
+    assert "127.0.0.1:8000" in (tmp / "open.log").read_text()
+    assert not marker.exists() and not started.exists()
+    assert not (backend / "run" / "uvicorn.pid").exists()
+    assert not (backend / "run" / "launch.lock").exists()
+
+
+def test_long_japanese_reason_is_not_cut_mid_character_under_c_locale(env):
+    """LC_ALL=Cで起動されても、日本語の要約が文字の途中で切れない(指摘26)。"""
+    tmp, backend, e = env
+    e["LC_ALL"] = "C"
+    e["LANG"] = "C"
+    _exe(backend / ".venv/bin/python", 'echo "' + "あ" * 150 + '" >&2\nexit 1\n')
+    _run(backend, e)
+    dialog = (tmp / "dialog.log").read_bytes()
+    dialog.decode("utf-8")  # 不正なバイト列があれば例外
+    assert "あ".encode() * 10 in dialog
